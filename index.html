@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<!--
+  ╔══════════════════════════════════════════════════════════════╗
+  ║              KOLVI GAME STORE — Página principal             ║
+  ║                                                              ║
+  ║  Archivo: index.html                                         ║
+  ║  Descripción: Landing page (página de presentación) para     ║
+  ║               Kolvi Game Store. Una sola página que informa  ║
+  ║               al cliente y lo dirige a WhatsApp.             ║
+  ║                                                              ║
+  ║  Tecnologías usadas:                                         ║
+  ║    - HTML  → estructura (los "huesos" de la página)          ║
+  ║    - CSS   → estilos visuales (colores, fuentes, animaciones)║
+  ║    - JS    → comportamiento (animaciones al hacer scroll)    ║
+  ╚══════════════════════════════════════════════════════════════╝
+-->
+
+<!-- DOCTYPE le dice al navegador que esto es HTML versión 5 (la más moderna) -->
+<html lang="es">
+<!--
+  <html> es la etiqueta raíz. Todo el contenido va adentro.
+  lang="es" indica al navegador y a Google que el idioma es español.
+-->
+
+<head>
+<!--
+  <head> contiene información INVISIBLE para el usuario,
+  pero importante para el navegador y para Google (SEO).
+  Aquí van: título de la pestaña, fuentes, estilos CSS, etc.
+-->
+
+  <!-- UTF-8 permite mostrar tildes, ñ y caracteres especiales sin error -->
+  <meta charset="UTF-8" />
+
+  <!--
+    viewport es crucial para que la página se vea bien en celular.
+    width=device-width → usa el ancho real del dispositivo
+    initial-scale=1.0  → sin zoom inicial
+  -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Título que aparece en la pestaña del navegador y en resultados de Google -->
+  <title>Kolvi Game Store</title>
+
+  <!--
+    Google Fonts: cargamos 3 tipografías gratuitas desde internet.
+    Le dan personalidad a la página.
+
+    - Cinzel Decorative → elegante tipo "juego de rol", para títulos
+    - Rajdhani          → moderna y limpia, para texto general
+    - Crimson Pro       → clásica con serifa, para frases en cursiva
+
+    display=swap evita que la página quede en blanco mientras carga la fuente.
+  -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Rajdhani:wght@400;500;600;700&family=Crimson+Pro:ital,wght@0,400;1,400&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    /*
+    ================================================================
+    CSS — Hoja de Estilos en Cascada
+    ================================================================
+    CSS define CÓMO se ve cada elemento: colores, tamaños,
+    posiciones, animaciones, etc.
+
+    La "cascada" significa que los estilos bajan de arriba hacia abajo,
+    y los más específicos ganan sobre los generales.
+
+    Sintaxis:
+      selector {
+        propiedad: valor;
+      }
+    */
+
+    /* ── VARIABLES CSS ───────────────────────────────────────────────
+       Como variables en C++, pero para valores visuales.
+       :root es el elemento raíz (toda la página).
+       Las variables empiezan con -- y se usan con var(--nombre).
+       Ventaja: cambiás --gold aquí y cambia en TODA la página.
+    */
+    :root {
+      --gold:       #C9A84C; /* dorado principal */
+      --gold-light: #F0D080; /* dorado claro para brillos */
+      --gold-dark:  #8B6914; /* dorado oscuro para sombras */
+      --black:      #0A0A0A; /* negro profundo del fondo */
+      --cream:      #F5EED8; /* crema claro, color principal del texto */
+      --cream-dark: #E8D9B0; /* crema oscuro, texto secundario */
+      --ink:        #1A1208; /* casi negro cálido, para texto sobre dorado */
+    }
+
+    /* ── RESET UNIVERSAL ─────────────────────────────────────────────
+       El selector * aplica a TODOS los elementos sin excepción.
+       Los navegadores tienen estilos por defecto distintos entre sí
+       (Chrome, Firefox, Safari difieren). Esto los elimina para
+       que todo parta de cero e igual en todos los navegadores.
+
+       - margin:     espacio FUERA del elemento
+       - padding:    espacio DENTRO del elemento
+       - box-sizing: border-box → el tamaño incluye borde y padding.
+         Sin esto, un div de 200px con padding 20px mediría 240px.
+    */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* scroll-behavior: smooth → los links internos (#seccion)
+       desplazan la página suavemente en vez de saltar de golpe */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* ── BODY: estilos base de toda la página ────────────────────────
+       Todo lo que no tenga estilo propio heredará estas propiedades.
+    */
+    body {
+      background: var(--black);            /* fondo negro */
+      color: var(--cream);                 /* texto color crema por defecto */
+      font-family: 'Rajdhani', sans-serif; /* fuente base */
+      overflow-x: hidden;                  /* evita scroll horizontal no deseado */
+      cursor: default;                     /* cursor de flecha normal */
+    }
+
+    /* ── TEXTURA DE GRANO ─────────────────────────────────────────────
+       ::before es un pseudo-elemento: una capa virtual que CSS crea
+       sin necesidad de código HTML extra.
+       Aquí creamos una textura de grano encima de toda la página.
+
+       position: fixed  → siempre visible aunque hagas scroll
+       pointer-events: none → el usuario puede hacer clic "a través" de esta capa
+       z-index: 9999    → encima de todo (z-index = profundidad, como capas)
+    */
+    body::before {
+      content: ''; /* los pseudo-elementos NECESITAN content, aunque esté vacío */
+      position: fixed;
+      inset: 0;    /* shorthand de: top:0; right:0; bottom:0; left:0 */
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.4;
+    }
+
+    /* ── BARRA DE SCROLL PERSONALIZADA ──────────────────────────────
+       Solo funciona en Chrome y Edge. Le damos el estilo de la marca.
+    */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--black); }
+    ::-webkit-scrollbar-thumb { background: var(--gold-dark); border-radius: 3px; }
+
+
+    /* ════════════════════════════════════════════════════════════════
+       SECCIÓN HERO — Primera pantalla, impacto visual
+    ════════════════════════════════════════════════════════════════ */
+    #hero {
+      min-height: 100vh;       /* al menos 100% de la altura de pantalla */
+      display: flex;           /* activamos Flexbox para centrar contenido */
+      flex-direction: column;  /* hijos apilados verticalmente */
+      align-items: center;     /* centrado horizontal */
+      justify-content: center; /* centrado vertical */
+      position: relative;      /* necesario para ::before y ::after */
+      overflow: hidden;        /* recorta lo que se salga */
+      /*
+        radial-gradient: degradado circular.
+        Centro café oscuro → bordes negro.
+        Da efecto de "luz desde adentro".
+      */
+      background: radial-gradient(ellipse at 50% 60%, #1a1200 0%, #0A0A0A 70%);
+      padding: 2rem 1rem;
+    }
+
+    /* Anillos animados decorativos alrededor de la ranita */
+    #hero::before,
+    #hero::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%; /* círculo perfecto */
+      border: 1px solid rgba(201,168,76,0.15); /* borde dorado semitransparente */
+      animation: pulse-ring 6s ease-in-out infinite; /* animación continua */
+    }
+    #hero::before { /* anillo interior */
+      width: 600px; height: 600px;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%); /* centra desde su punto medio */
+    }
+    #hero::after { /* anillo exterior */
+      width: 900px; height: 900px;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      animation-delay: 1.5s; /* empieza después → efecto de olas */
+    }
+
+    /* @keyframes define la animación paso a paso (0% inicio → 100% fin) */
+    @keyframes pulse-ring {
+      0%, 100% { opacity: 0.15; transform: translate(-50%,-50%) scale(1); }
+      50%       { opacity: 0.35; transform: translate(-50%,-50%) scale(1.04); }
+    }
+
+    /* Decoraciones en las 4 esquinas del hero */
+    .corner {
+      position: absolute;
+      width: 80px; height: 80px;
+      border-color: var(--gold-dark);
+      border-style: solid;
+      opacity: 0.5;
+    }
+    /* Cada clase muestra solo 2 lados del borde → efecto de "L" dorada */
+    .corner-tl { top: 24px; left: 24px;     border-width: 2px 0 0 2px; }
+    .corner-tr { top: 24px; right: 24px;    border-width: 2px 2px 0 0; }
+    .corner-bl { bottom: 24px; left: 24px;  border-width: 0 0 2px 2px; }
+    .corner-br { bottom: 24px; right: 24px; border-width: 0 2px 2px 0; }
+
+    /* Imagen de la ranita mascota */
+    .hero-mascot {
+      width: 200px; height: 200px;
+      object-fit: contain; /* escala sin recortar ni deformar */
+      /*
+        drop-shadow funciona en imágenes con transparencia (PNG).
+        A diferencia de box-shadow, sigue la silueta del objeto.
+        Dos capas: una intensa cerca → efecto de brillo dorado.
+      */
+      filter:
+        drop-shadow(0 0 40px rgba(201,168,76,0.5))
+        drop-shadow(0 0 80px rgba(201,168,76,0.2));
+      animation: float 4s ease-in-out infinite;
+      z-index: 2;
+      margin-bottom: 1.5rem;
+    }
+
+    /* La ranita sube y baja suavemente */
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50%       { transform: translateY(-14px); }
+    }
+
+    /* Título "Kolvi Game Store" */
+    .hero-title {
+      font-family: 'Cinzel Decorative', serif;
+      /*
+        clamp(min, preferido, max): tamaño responsive automático.
+        8vw = 8% del ancho de pantalla.
+        En celular nunca baja de 2rem, en escritorio nunca sube de 4.5rem.
+      */
+      font-size: clamp(2rem, 8vw, 4.5rem);
+      font-weight: 900;
+      line-height: 1;
+      text-align: center;
+      /*
+        Truco para texto con gradiente:
+        1. Gradiente como fondo del texto
+        2. background-clip: text → recorta el fondo con la forma de las letras
+        3. -webkit-text-fill-color: transparent → letras transparentes
+        Resultado: el gradiente se ve dentro de las letras.
+      */
+      background: linear-gradient(180deg, var(--gold-light) 0%, var(--gold) 50%, var(--gold-dark) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 0.05em;
+      z-index: 2;
+      animation: fadeup 0.9s ease both; /* aparece desde abajo al cargar */
+    }
+
+    .hero-subtitle {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: clamp(0.9rem, 3vw, 1.3rem);
+      font-weight: 500;
+      letter-spacing: 0.4em;    /* muy espaciado → efecto de etiqueta */
+      text-transform: uppercase;
+      color: var(--gold);
+      opacity: 0.75;
+      margin-top: 0.6rem;
+      z-index: 2;
+      animation: fadeup 0.9s 0.2s ease both; /* 0.2s delay: aparece después del título */
+    }
+
+    /* Separador decorativo: línea — diamante — línea */
+    .divider-gold {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin: 1.5rem 0;
+      z-index: 2;
+      animation: fadeup 0.9s 0.3s ease both;
+    }
+    /* Líneas que desaparecen en los extremos gracias al gradiente */
+    .divider-gold span {
+      display: block;
+      height: 1px; width: 80px;
+      background: linear-gradient(90deg, transparent, var(--gold));
+    }
+    .divider-gold span:last-child {
+      background: linear-gradient(90deg, var(--gold), transparent);
+    }
+    /* Cuadrado girado 45° → diamante */
+    .divider-gold .diamond {
+      width: 8px; height: 8px;
+      background: var(--gold);
+      transform: rotate(45deg);
+    }
+
+    .hero-tagline {
+      font-family: 'Crimson Pro', serif;
+      font-style: italic;
+      font-size: clamp(1rem, 2.5vw, 1.25rem);
+      color: var(--cream-dark);
+      text-align: center;
+      max-width: 500px;  /* limita ancho para mejor lectura */
+      line-height: 1.6;
+      z-index: 2;
+      animation: fadeup 0.9s 0.4s ease both;
+    }
+
+    .hero-cta {
+      margin-top: 2.5rem;
+      z-index: 2;
+      animation: fadeup 0.9s 0.6s ease both; /* aparece último → secuencia natural */
+    }
+
+    /* Los elementos "suben" al aparecer: empiezan abajo e invisibles */
+    @keyframes fadeup {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+
+    /* ════════════════════════════════════════════════════════════════
+       BOTONES
+    ════════════════════════════════════════════════════════════════ */
+
+    /* Botón principal dorado */
+    .btn-gold {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.7rem;
+      /*
+        Gradiente animado: background-size: 200% lo hace el doble de ancho.
+        Al hover, background-position lo desplaza → efecto de "brillo que pasa".
+      */
+      background: linear-gradient(135deg, var(--gold-dark), var(--gold), var(--gold-light), var(--gold));
+      background-size: 200% 200%;
+      color: var(--ink);  /* texto oscuro sobre fondo dorado */
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 0.9rem 2.2rem;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      /*
+        clip-path: polygon() recorta el elemento con la forma dada.
+        Crea el efecto de paralelogramo (esquinas cortadas en diagonal).
+      */
+      clip-path: polygon(12px 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%);
+      transition: background-position 0.4s, transform 0.2s, box-shadow 0.3s;
+      box-shadow: 0 4px 30px rgba(201,168,76,0.4);
+    }
+    .btn-gold:hover {
+      background-position: right center; /* mueve el gradiente */
+      transform: translateY(-2px);       /* sube levemente */
+      box-shadow: 0 8px 40px rgba(201,168,76,0.6);
+    }
+
+    /* Botón secundario: solo contorno, sin relleno */
+    .btn-outline {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.7rem;
+      background: transparent;
+      color: var(--gold);
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 600;
+      font-size: 0.95rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 0.8rem 2rem;
+      border: 1px solid var(--gold-dark);
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.3s; /* all → anima TODAS las propiedades que cambien */
+    }
+    .btn-outline:hover {
+      border-color: var(--gold);
+      background: rgba(201,168,76,0.08); /* fondo sutil al hover */
+      transform: translateY(-2px);
+    }
+
+
+    /* ════════════════════════════════════════════════════════════════
+       ESTILOS COMPARTIDOS ENTRE SECCIONES
+    ════════════════════════════════════════════════════════════════ */
+    section { padding: 5rem 1.5rem; }
+
+    .container {
+      max-width: 1100px; /* no se extiende infinito en pantallas grandes */
+      margin: 0 auto;    /* auto en lados = centrado horizontal */
+    }
+
+    .section-label {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 0.75rem;
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      color: var(--gold);
+      opacity: 0.7;
+      margin-bottom: 0.5rem;
+    }
+
+    .section-title {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: clamp(1.5rem, 4vw, 2.5rem);
+      font-weight: 700;
+      background: linear-gradient(180deg, var(--gold-light), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.2;
+      margin-bottom: 1rem;
+    }
+
+
+    /* ════════════════════════════════════════════════════════════════
+       SECCIÓN CATEGORÍAS
+    ════════════════════════════════════════════════════════════════ */
+    #categorias {
+      background: linear-gradient(180deg, #0A0A0A 0%, #100D00 50%, #0A0A0A 100%);
+    }
+    #categorias .container { text-align: center; }
+
+    .cat-grid {
+      /*
+        CSS Grid: sistema para layouts en 2D (filas y columnas).
+        auto-fit → crea todas las columnas que quepan
+        minmax(220px, 1fr) → mínimo 220px, máximo 1 fracción del espacio
+        Resultado: en celular 2 columnas, en escritorio 4. Responsive automático.
+      */
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+
+    .cat-card {
+      background: linear-gradient(145deg, #161005, #0e0b02);
+      border: 1px solid rgba(201,168,76,0.2);
+      padding: 2rem 1.5rem;
+      text-align: center;
+      position: relative; /* para el ::before de brillo interior */
+      transition: all 0.4s;
+      overflow: hidden;
+    }
+    /* Capa de brillo que aparece al hacer hover */
+    .cat-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(201,168,76,0.06), transparent);
+      opacity: 0; /* invisible por defecto */
+      transition: opacity 0.4s;
+    }
+    .cat-card:hover {
+      border-color: var(--gold);
+      transform: translateY(-6px);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 30px rgba(201,168,76,0.15);
+    }
+    .cat-card:hover::before { opacity: 1; } /* brillo aparece al hover */
+
+    .cat-icon {
+      font-size: 2.8rem;
+      margin-bottom: 1rem;
+      display: block;
+      filter: drop-shadow(0 0 10px rgba(201,168,76,0.4));
+    }
+    .cat-name {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: 0.95rem;
+      color: var(--gold);
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+    .cat-desc {
+      font-size: 0.9rem;
+      color: rgba(245,238,216,0.55); /* crema al 55% de opacidad */
+      line-height: 1.5;
+    }
+
+
+    /* ════════════════════════════════════════════════════════════════
+       SECCIÓN CONFIANZA
+    ════════════════════════════════════════════════════════════════ */
+    #confianza {
+      background: #080700;
+      position: relative;
+    }
+    /* Líneas decorativas arriba y abajo de la sección */
+    #confianza::before {
+      content: ''; position: absolute;
+      top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold-dark), transparent);
+    }
+    #confianza::after {
+      content: ''; position: absolute;
+      bottom: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold-dark), transparent);
+    }
+
+    .trust-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 2rem;
+      margin-top: 3rem;
+    }
+
+    /* Cada punto: icono izquierda + texto derecha en fila */
+    .trust-item {
+      display: flex;
+      gap: 1.2rem;
+      align-items: flex-start; /* alineados al tope */
+    }
+    .trust-icon {
+      font-size: 2rem;
+      flex-shrink: 0; /* no se achica aunque el espacio sea reducido */
+      filter: drop-shadow(0 0 8px rgba(201,168,76,0.5));
+    }
+    .trust-text h3 {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700; font-size: 1.1rem;
+      color: var(--gold-light);
+      letter-spacing: 0.05em; margin-bottom: 0.3rem;
+    }
+    .trust-text p {
+      font-size: 0.9rem;
+      color: rgba(245,238,216,0.55);
+      line-height: 1.6;
+    }
+
+
+    /* ════════════════════════════════════════════════════════════════
+       SECCIÓN CONTACTO
+    ════════════════════════════════════════════════════════════════ */
+    #contacto {
+      background: radial-gradient(ellipse at 50% 0%, #1a1200 0%, #0A0A0A 70%);
+      text-align: center;
+    }
+    .contact-box {
+      margin-top: 3rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+    }
+    .contact-note {
+      font-family: 'Crimson Pro', serif;
+      font-style: italic;
+      font-size: 1.1rem;
+      color: rgba(245,238,216,0.6);
+      max-width: 480px;
+      line-height: 1.7;
+    }
+    .contact-btns {
+      display: flex;
+      flex-wrap: wrap; /* si no caben, pasan a siguiente línea */
+      gap: 1rem;
+      justify-content: center;
+    }
+
+
+    /* ════════════════════════════════════════════════════════════════
+       PIE DE PÁGINA
+    ════════════════════════════════════════════════════════════════ */
+    footer {
+      background: #050400;
+      border-top: 1px solid rgba(201,168,76,0.15);
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+    }
+    footer .footer-logo {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: 1.1rem; color: var(--gold);
+      opacity: 0.7; margin-bottom: 0.5rem;
+    }
+    footer p { font-size: 0.8rem; color: rgba(245,238,216,0.25); letter-spacing: 0.1em; }
+
+
+    /* ════════════════════════════════════════════════════════════════
+       BOTÓN FLOTANTE DE WHATSAPP
+       position: fixed → siempre visible en la esquina, sin importar el scroll
+    ════════════════════════════════════════════════════════════════ */
+    .wa-float {
+      position: fixed;
+      bottom: 2rem; right: 1.5rem;
+      z-index: 1000; /* encima de todo el contenido */
+      display: flex; align-items: center; gap: 0.6rem;
+      background: #25D366; /* verde oficial de WhatsApp */
+      color: white;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700; font-size: 0.9rem;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      text-decoration: none;
+      padding: 0.85rem 1.4rem;
+      border-radius: 50px; /* forma de píldora */
+      box-shadow: 0 6px 30px rgba(37,211,102,0.4);
+      animation: wa-bounce 3s ease-in-out infinite; /* rebota para llamar atención */
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .wa-float:hover {
+      transform: translateY(-3px) scale(1.04);
+      box-shadow: 0 10px 40px rgba(37,211,102,0.6);
+      animation: none; /* detiene el rebote al hacer hover */
+    }
+    .wa-float svg { width: 22px; height: 22px; flex-shrink: 0; }
+    @keyframes wa-bounce {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-6px); }
+    }
+
+
+    /* ════════════════════════════════════════════════════════════════
+       BARRA DE NAVEGACIÓN FIJA
+    ════════════════════════════════════════════════════════════════ */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 500;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between; /* logo izquierda, links derecha */
+      align-items: center;
+      background: linear-gradient(180deg, rgba(10,10,10,0.95), transparent);
+      backdrop-filter: blur(4px); /* desenfoca lo que hay detrás (efecto vidrio) */
+    }
+    .nav-logo {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: 1rem; color: var(--gold);
+      text-decoration: none; letter-spacing: 0.05em;
+    }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 600; font-size: 0.85rem;
+      letter-spacing: 0.2em; text-transform: uppercase;
+      color: rgba(245,238,216,0.6);
+      text-decoration: none; transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--gold); }
+
+
+    /* ════════════════════════════════════════════════════════════════
+       RESPONSIVE — @media queries
+       Condiciones que aplican estilos según el tamaño de pantalla.
+       "Si la pantalla mide menos de 600px, aplicá esto."
+    ════════════════════════════════════════════════════════════════ */
+    @media (max-width: 600px) {
+      .nav-links { display: none; } /* ocultamos links del nav en celular */
+      .cat-grid { grid-template-columns: 1fr 1fr; } /* 2 columnas en celular */
+      .trust-grid { grid-template-columns: 1fr; }   /* 1 columna en celular */
+    }
+
+  </style>
+</head>
+
+<body>
+<!--
+  ================================================================
+  BODY — Contenido visible
+  ================================================================
+  Orden de secciones:
+    1. <nav>       → barra de navegación fija
+    2. #hero       → pantalla de impacto inicial
+    3. #categorias → qué se vende
+    4. #confianza  → razones para comprar
+    5. #contacto   → llamado a la acción + WhatsApp
+    6. <footer>    → pie de página
+    7. .wa-float   → botón flotante de WhatsApp
+    8. <script>    → JavaScript (al final para que el HTML cargue primero)
+-->
+
+
+<!-- ══════════════════════════════
+     1. NAVEGACIÓN FIJA
+     href="#id" son links internos: llevan a la sección con ese id.
+═══════════════════════════════ -->
+<nav>
+  <a href="#hero" class="nav-logo">Kolvi 🐸</a>
+  <ul class="nav-links">
+    <li><a href="#categorias">Catálogo</a></li>
+    <li><a href="#confianza">Nosotros</a></li>
+    <li><a href="#contacto">Contacto</a></li>
+  </ul>
+</nav>
+
+
+<!-- ══════════════════════════════
+     2. HERO — Primera pantalla
+═══════════════════════════════ -->
+<section id="hero">
+
+  <!-- Marcos decorativos en las 4 esquinas (divs vacíos estilizados con CSS) -->
+  <div class="corner corner-tl"></div>
+  <div class="corner corner-tr"></div>
+  <div class="corner corner-bl"></div>
+  <div class="corner corner-br"></div>
+
+  <!--
+    IMAGEN MASCOTA
+    ──────────────
+    Ahora usa un placeholder. Para usar tu ranita real:
+      Opción A: Cambiá el src directamente aquí:
+                src="frog-logo.png"  (ponés la imagen en la misma carpeta)
+      Opción B: Descomentá la línea en el <script> del final.
+
+    alt= describe la imagen para personas con lector de pantalla y para Google.
+  -->
+  <img
+    src="https://placehold.co/200x200/1a1200/C9A84C?text=🐸"
+    alt="Kolvi mascota — ranita dorada con Nintendo Switch"
+    class="hero-mascot"
+    id="mascot"
+  />
+
+  <!-- <br/> es un salto de línea dentro del texto -->
+  <h1 class="hero-title">Kolvi<br/>Game Store</h1>
+  <p class="hero-subtitle">Tu tienda gamer de confianza</p>
+
+  <!-- Separador visual: línea — diamante — línea -->
+  <div class="divider-gold">
+    <span></span>
+    <div class="diamond"></div>
+    <span></span>
+  </div>
+
+  <p class="hero-tagline">
+    Consolas, videojuegos y figuras de colección — nuevos, usados y vintage.<br/>
+    Calidad garantizada, precio justo.
+  </p>
+
+  <!-- Botón que lleva a la sección contacto -->
+  <div class="hero-cta">
+    <a href="#contacto" class="btn-gold">
+      <span>Ver disponibilidad</span>
+      <!-- Icono de flecha dibujado en SVG (gráfico vectorial en código) -->
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16">
+        <path d="M5 12h14M12 5l7 7-7 7"/>
+      </svg>
+    </a>
+  </div>
+
+</section>
+
+
+<!-- ══════════════════════════════
+     3. CATEGORÍAS — Qué se vende
+═══════════════════════════════ -->
+<section id="categorias">
+  <div class="container">
+
+    <p class="section-label">Lo que encontrarás</p>
+    <h2 class="section-title">Catálogo</h2>
+
+    <!-- El CSS Grid distribuye las tarjetas automáticamente según el ancho -->
+    <div class="cat-grid">
+
+      <div class="cat-card">
+        <span class="cat-icon">🎮</span>
+        <p class="cat-name">Nintendo Switch</p>
+        <p class="cat-desc">Consolas, Joy-Cons y juegos. La colección más completa.</p>
+      </div>
+
+      <div class="cat-card">
+        <span class="cat-icon">🎯</span>
+        <p class="cat-name">PlayStation</p>
+        <p class="cat-desc">PS4, PS5 y títulos para todos los gustos.</p>
+      </div>
+
+      <div class="cat-card">
+        <span class="cat-icon">🕹️</span>
+        <p class="cat-name">Retro & DS</p>
+        <p class="cat-desc">Nintendo DS, Game Boy, Xbox y consolas clásicas.</p>
+      </div>
+
+      <div class="cat-card">
+        <span class="cat-icon">⭐</span>
+        <p class="cat-name">Anime & Figuras</p>
+        <p class="cat-desc">Figuras de Dragon Ball y coleccionables de edición limitada.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════
+     4. CONFIANZA — ¿Por qué comprar?
+═══════════════════════════════ -->
+<section id="confianza">
+  <div class="container">
+
+    <p class="section-label">¿Por qué elegirnos?</p>
+    <h2 class="section-title">Comprá con<br/>confianza</h2>
+
+    <div class="trust-grid">
+
+      <div class="trust-item">
+        <span class="trust-icon">✅</span>
+        <div class="trust-text">
+          <h3>Stock revisado</h3>
+          <p>Cada producto pasa por revisión antes de venderse. Sin sorpresas.</p>
+        </div>
+      </div>
+
+      <div class="trust-item">
+        <span class="trust-icon">💬</span>
+        <div class="trust-text">
+          <h3>Atención directa</h3>
+          <p>Hablás conmigo directamente, sin bots. Respuesta rápida por WhatsApp.</p>
+        </div>
+      </div>
+
+      <div class="trust-item">
+        <span class="trust-icon">🚚</span>
+        <div class="trust-text">
+          <h3>Envíos y entrega</h3>
+          <p>Opciones de entrega local y envío. Coordinamos lo que te sea más cómodo.</p>
+        </div>
+      </div>
+
+      <div class="trust-item">
+        <span class="trust-icon">🏆</span>
+        <div class="trust-text">
+          <h3>Trayectoria real</h3>
+          <p>Cientos de ventas en Facebook Marketplace. Clientes reales, reseñas reales.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════
+     5. CONTACTO — Llamado a la acción
+═══════════════════════════════ -->
+<section id="contacto">
+  <div class="container">
+
+    <p class="section-label">Hablemos</p>
+    <h2 class="section-title">¿Te interesa algo?</h2>
+
+    <div class="contact-box">
+      <p class="contact-note">
+        Escribime directamente por WhatsApp y te digo disponibilidad, precio
+        y cómo coordinamos. Sin vueltas, sin formularios.
+      </p>
+
+      <div class="contact-btns">
+
+        <!--
+          BOTÓN DE WHATSAPP
+          ─────────────────
+          Formato del link: https://wa.me/CODIGOPAIS+NUMERO
+          Costa Rica = +506
+          Tu número   = 85842985
+          Completo    = 50685842985
+
+          El ?text= agrega un mensaje pre-escrito cuando se abre el chat.
+          Los espacios y emojis se "codifican" para URLs:
+            espacio → %20
+            á       → %C3%A1
+            🐸      → %F0%9F%90%B8
+
+          target="_blank" abre en nueva pestaña (no cierra tu página).
+          rel="noopener" es una buena práctica de seguridad con target="_blank".
+        -->
+        <a
+          href="https://wa.me/50685842985?text=Hola%20Kolvi!%20Vi%20tu%20p%C3%A1gina%20y%20me%20interesa%20consultar%20por%20un%20producto%20%F0%9F%90%B8"
+          target="_blank"
+          rel="noopener"
+          class="btn-gold"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor" width="18">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+            <path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.122 1.528 5.855L0 24l6.335-1.652A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.9 0-3.681-.52-5.21-1.426l-.374-.222-3.884 1.013 1.036-3.782-.245-.39A9.961 9.961 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
+          </svg>
+          Escribir por WhatsApp
+        </a>
+
+        <!--
+          TODO: Reemplazá este href con el link real de tu perfil o
+          página de Facebook Marketplace.
+        -->
+        <a href="https://www.facebook.com/marketplace" target="_blank" rel="noopener" class="btn-outline">
+          Ver en Facebook
+        </a>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════
+     6. PIE DE PÁGINA
+═══════════════════════════════ -->
+<footer>
+  <p class="footer-logo">Kolvi Game Store</p>
+  <!-- &copy; = símbolo ©  |  &mdash; = guión largo — -->
+  <p>&copy; 2025 kolvigamestore.com &mdash; Todos los derechos reservados</p>
+</footer>
+
+
+<!-- ══════════════════════════════
+     7. BOTÓN FLOTANTE WHATSAPP
+     Siempre visible en esquina inferior derecha gracias a position: fixed
+═══════════════════════════════ -->
+<a
+  href="https://wa.me/50685842985?text=Hola%20Kolvi!%20Vi%20tu%20p%C3%A1gina%20%F0%9F%90%B8"
+  target="_blank"
+  rel="noopener"
+  class="wa-float"
+  aria-label="Contactar por WhatsApp"
+>
+  <svg viewBox="0 0 24 24" fill="currentColor">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+    <path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.122 1.528 5.855L0 24l6.335-1.652A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.9 0-3.681-.52-5.21-1.426l-.374-.222-3.884 1.013 1.036-3.782-.245-.39A9.961 9.961 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
+  </svg>
+  WhatsApp
+</a>
+
+
+<!-- ══════════════════════════════
+     8. JAVASCRIPT
+     Va al FINAL del body para que todo el HTML cargue primero.
+     Si pusiera el script en el <head>, el JS intentaría buscar elementos
+     que aún no existen → error.
+═══════════════════════════════ -->
+<script>
+  /*
+    JavaScript tiene la misma lógica base que C++:
+    variables, condiciones, bucles, funciones.
+    La diferencia es que aquí manipulamos el DOM
+    (Document Object Model = representación del HTML en memoria).
+  */
+
+
+  /* ── CAMBIAR LA IMAGEN DE LA RANITA ───────────────────────────
+     Cuando tengas tu imagen lista:
+       1. Guardala en la misma carpeta como: frog-logo.png
+       2. Quitá el // de la siguiente línea (descomentá)
+  */
+  // document.getElementById('mascot').src = 'frog-logo.png';
+  /*
+    Explicación línea por línea:
+    - document              → objeto que representa toda la página HTML
+    - .getElementById('mascot') → busca el elemento con id="mascot"
+                                   (nuestra etiqueta <img>)
+    - .src = 'frog-logo.png'   → cambia el atributo src (la ruta de la imagen)
+  */
+
+
+  /* ── ANIMACIÓN DE APARICIÓN AL HACER SCROLL ───────────────────
+     Las tarjetas y puntos empiezan invisibles.
+     Cuando el usuario los ve en pantalla, aparecen suavemente.
+
+     Usamos IntersectionObserver: vigila si un elemento es visible.
+     Es más eficiente que el evento "scroll" tradicional porque
+     el navegador lo optimiza internamente.
+  */
+
+  // Creamos el observador y le decimos qué hacer cuando detecte un elemento
+  const observer = new IntersectionObserver(
+
+    // Función callback: se llama cada vez que algo entra/sale de pantalla
+    (entries) => {
+      // entries = lista de todos los elementos observados que cambiaron de estado
+      entries.forEach(entry => {
+        // isIntersecting = true cuando el elemento es visible en pantalla
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)'; // posición normal
+        }
+        // Si quisieras que vuelva a ocultarse al salir: agregás el else acá
+      });
+    },
+
+    { threshold: 0.1 }
+    // threshold: 0.1 → actívate cuando el 10% del elemento sea visible
+    // threshold: 0.5 → esperaría a que la mitad sea visible
+  );
+
+  /*
+    querySelectorAll busca TODOS los elementos que coincidan con el selector CSS.
+    Es como getElementById pero para múltiples elementos y con selectores CSS.
+    Retorna una NodeList (similar a un array de C++).
+    .forEach itera sobre cada elemento, como un for en C++.
+  */
+  document.querySelectorAll('.cat-card, .trust-item').forEach(elemento => {
+
+    // Estado inicial: invisible y desplazado 30px hacia abajo
+    elemento.style.opacity = '0';
+    elemento.style.transform = 'translateY(30px)';
+
+    // transition indica qué propiedades animar y en cuánto tiempo
+    // 'ease' = empieza rápido, termina lento (natural y suave)
+    elemento.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+
+    // Registramos este elemento para que el observer lo vigile
+    observer.observe(elemento);
+
+  });
+
+  /*
+    Resumen del efecto completo:
+    ① Elementos empiezan: opacity=0, desplazados 30px abajo
+    ② El observer los vigila constantemente
+    ③ Usuario hace scroll → elemento entra en pantalla
+    ④ Observer llama al callback → cambia opacity a 1 y quita el desplazamiento
+    ⑤ transition hace que ese cambio tome 0.6 segundos → se ve suave
+  */
+
+</script>
+
+</body>
+</html>
