@@ -424,25 +424,64 @@
   const toSlug = str =>
     str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-');
 
-  /* ── Parse CSV genérico ── */
+  /* ── Columnas públicas que nos interesan (normalizadas) ── */
+  const COLS_PUBLICAS = ['imagen', 'catalogo', 'nombre', 'precio', 'estado'];
+
+  /* ── Normalizar texto para comparar encabezados ── */
+  const norm = s => s.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+  /* ── Parse CSV robusto: maneja celdas con saltos de línea y comas ── */
   function parseCSV(texto) {
-    const lineas = texto.trim().split('\n');
-    const encabezados = lineas[0].split(',').map(h =>
-      h.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    );
-    return lineas.slice(1).map(linea => {
-      const cols = [];
-      let dentro = false, celda = '';
-      for (let c of linea) {
-        if (c === '"') { dentro = !dentro; }
-        else if (c === ',' && !dentro) { cols.push(celda.trim()); celda = ''; }
-        else { celda += c; }
+    /* Tokenizar carácter a carácter para no romper con \n dentro de comillas */
+    const tokens = [];
+    let celda = '', enComillas = false;
+
+    for (let i = 0; i < texto.length; i++) {
+      const c = texto[i];
+      if (c === '"') {
+        /* Comilla doble escapada ("") dentro de un campo */
+        if (enComillas && texto[i + 1] === '"') { celda += '"'; i++; }
+        else { enComillas = !enComillas; }
+      } else if (c === ',' && !enComillas) {
+        tokens.push(celda); celda = '';
+      } else if ((c === '\n' || (c === '\r' && texto[i + 1] === '\n')) && !enComillas) {
+        if (c === '\r') i++; /* saltar \r de \r\n */
+        tokens.push(celda); tokens.push('\n'); celda = '';
+      } else {
+        celda += c;
       }
-      cols.push(celda.trim());
-      const obj = {};
-      encabezados.forEach((h, i) => { obj[h] = cols[i] || ''; });
-      return obj;
+    }
+    tokens.push(celda); /* última celda */
+
+    /* Separar en filas usando el marcador '\n' */
+    const filas = [];
+    let fila = [];
+    for (const t of tokens) {
+      if (t === '\n') { filas.push(fila); fila = []; }
+      else            { fila.push(t.trim()); }
+    }
+    if (fila.length) filas.push(fila);
+
+    if (filas.length < 2) return [];
+
+    /* Mapear índices de encabezados a columnas públicas */
+    const headers = filas[0].map(norm);
+    const idx = {};
+    COLS_PUBLICAS.forEach(col => {
+      const i = headers.indexOf(col);
+      if (i !== -1) idx[col] = i;
     });
+
+    /* Construir objetos solo con las columnas públicas */
+    return filas.slice(1)
+      .map(cols => {
+        const obj = {};
+        COLS_PUBLICAS.forEach(col => {
+          obj[col] = idx[col] !== undefined ? (cols[idx[col]] || '') : '';
+        });
+        return obj;
+      })
+      .filter(p => p.nombre); /* ignorar filas vacías */
   }
 
   /* ── FASE 1: Construir filtros desde la Hoja 2 (catálogos) ── */
