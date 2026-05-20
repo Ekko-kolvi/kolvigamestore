@@ -275,6 +275,35 @@
     .product-card.vendido .product-img-wrap img { filter: grayscale(60%); }
     .product-card.vendido .product-wa { display: none; }
 
+    /* ── MENSAJE "SELECCIONÁ UNA CATEGORÍA" ── */
+    .select-prompt {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 40vh;
+      gap: 1.2rem;
+    }
+    .select-prompt-text {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: clamp(1rem, 3vw, 1.4rem);
+      background: linear-gradient(180deg, var(--gold-light), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 0.05em;
+      animation: float-msg 3s ease-in-out infinite;
+    }
+    .select-prompt-arrow {
+      font-size: 1.5rem;
+      animation: float-msg 3s ease-in-out infinite reverse;
+      filter: drop-shadow(0 0 8px rgba(201,168,76,0.4));
+    }
+    @keyframes float-msg {
+      0%, 100% { transform: translateY(0px); opacity: 0.7; }
+      50%       { transform: translateY(-8px); opacity: 1; }
+    }
+
     /* ── ESTADOS ── */
     .loading-state, .error-state, .empty-state {
       grid-column: 1 / -1;
@@ -365,13 +394,9 @@
     <h1 class="page-title" id="pageTitle">Inventario</h1>
     <p class="page-subtitle" id="pageSubtitle">Cargando catálogo...</p>
 
-    <!-- Filtros / catálogos -->
+    <!-- Filtros / catálogos — se generan dinámicamente desde el Sheet -->
     <div class="filter-bar" id="filterBar">
-      <a href="catalogo.html?cat=todo"         class="filter-btn" data-cat="todo">Todos</a>
-      <a href="catalogo.html?cat=switch"        class="filter-btn" data-cat="switch">Nintendo Switch</a>
-      <a href="catalogo.html?cat=playstation"   class="filter-btn" data-cat="playstation">PlayStation</a>
-      <a href="catalogo.html?cat=retro"         class="filter-btn" data-cat="retro">Retro & DS</a>
-      <a href="catalogo.html?cat=figuras"       class="filter-btn" data-cat="figuras">Anime & Figuras</a>
+      <button class="filter-btn" data-cat="todo" data-label="Inventario">Todos</button>
     </div>
   </div>
 </div>
@@ -380,9 +405,9 @@
 <main>
   <p class="results-count" id="resultsCount"></p>
   <div class="products-grid" id="productsGrid">
-    <div class="loading-state">
-      Cargando inventario
-      <div class="loading-dots"><span></span><span></span><span></span></div>
+    <div class="select-prompt" id="selectPrompt">
+      <span class="select-prompt-arrow">☝️</span>
+      <p class="select-prompt-text">Seleccioná una categoría</p>
     </div>
   </div>
 </main>
@@ -410,33 +435,12 @@
   ══════════════════════════════════════════════════════ */
   const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTsSGxthS53I8A8Jq5lUKOMlLsfPVHOwEITsF1kFXfdFexMpTaYan1ESSx3FvwGm-nRyd1fzlJpKHtB/pub?gid=0&single=true&output=csv';
 
-  /* ═══════════════════════════════════════════════════════
-     MAPEO: parámetro URL → columna "Catálogo" del Sheet
-     Ajustá los valores de la derecha para que coincidan
-     exactamente con lo que escribiste en Google Sheets.
-  ══════════════════════════════════════════════════════ */
-  const CATALOG_MAP = {
-    'todo':        { label: 'Todo el inventario',  subtitle: 'Todo lo disponible en este momento.', sheetValue: null },
-    'switch':      { label: 'Nintendo Switch',     subtitle: 'Consolas, Joy-Cons y juegos para Switch.', sheetValue: 'Nintendo Switch' },
-    'playstation': { label: 'PlayStation',         subtitle: 'PS4, PS5 y títulos para todos los gustos.', sheetValue: 'PlayStation' },
-    'retro':       { label: 'Retro & DS',          subtitle: 'Clásicos que nunca pasan de moda.', sheetValue: 'Retro & DS' },
-    'figuras':     { label: 'Anime & Figuras',     subtitle: 'Dragon Ball y coleccionables de edición limitada.', sheetValue: 'Anime & Figuras' },
-  };
-
   /* ── Leer parámetro de la URL ── */
   const params = new URLSearchParams(window.location.search);
   const catParam = (params.get('cat') || 'todo').toLowerCase();
-  const catInfo  = CATALOG_MAP[catParam] || CATALOG_MAP['todo'];
 
-  /* ── Actualizar encabezados con el catálogo seleccionado ── */
-  document.title = `${catInfo.label} — Kolvi Game Store`;
-  document.getElementById('pageTitle').textContent    = catInfo.label;
-  document.getElementById('pageSubtitle').textContent = catInfo.subtitle;
-
-  /* ── Marcar el filtro activo en la barra ── */
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    if (btn.dataset.cat === catParam) btn.classList.add('active');
-  });
+  /* ── Marcar título inicial mientras carga ── */
+  document.getElementById('pageSubtitle').textContent = 'Cargando catálogo...';
 
   /* ── Parse CSV ── */
   function parseCSV(texto) {
@@ -457,6 +461,82 @@
       encabezados.forEach((h, i) => { obj[h] = cols[i] || ''; });
       return obj;
     }).filter(p => p.nombre);
+  }
+
+  /* ── Construir filtros dinámicamente desde el Sheet ── */
+  function buildFilters(productos) {
+    const bar = document.getElementById('filterBar');
+    const catalogos = [...new Set(productos.map(p => p.catalogo).filter(Boolean))];
+
+    catalogos.forEach(cat => {
+      const slug = cat.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-');
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn';
+      btn.dataset.cat = slug;
+      btn.dataset.label = cat;
+      btn.textContent = cat;
+      bar.appendChild(btn);
+    });
+
+    /* Marcar el activo y actualizar título */
+    let tituloActivo = 'Inventario';
+    let subtituloActivo = 'Seleccioná una categoría para ver el stock.';
+
+    bar.querySelectorAll('.filter-btn').forEach(btn => {
+      if (btn.dataset.cat === catParam) {
+        btn.classList.add('active');
+        tituloActivo    = btn.dataset.label || btn.textContent;
+        subtituloActivo = `Stock disponible en ${tituloActivo}.`;
+      }
+    });
+
+    if (catParam === 'todo') {
+      bar.querySelector('[data-cat="todo"]').classList.add('active');
+    }
+
+    document.title = `${tituloActivo} — Kolvi Game Store`;
+    document.getElementById('pageTitle').textContent    = tituloActivo;
+    document.getElementById('pageSubtitle').textContent = subtituloActivo;
+
+    /* Click en filtro: filtra en memoria, sin recargar la página */
+    bar.addEventListener('click', e => {
+      const btn = e.target.closest('.filter-btn');
+      if (!btn) return;
+
+      bar.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const slug  = btn.dataset.cat;
+      const label = btn.dataset.label || btn.textContent;
+
+      document.getElementById('pageTitle').textContent    = slug === 'todo' ? 'Inventario' : label;
+      document.getElementById('pageSubtitle').textContent = slug === 'todo' ? 'Todo el stock disponible.' : `Stock disponible en ${label}.`;
+
+      /* Si los productos aún no cargaron, mostrar spinner */
+      if (!window._productos) {
+        document.getElementById('productsGrid').innerHTML =
+          `<div class="loading-state">Cargando<div class="loading-dots"><span></span><span></span><span></span></div></div>`;
+        return;
+      }
+
+      /* Ocultar el mensaje y mostrar productos */
+      let filtrados = window._productos;
+      if (slug !== 'todo') {
+        filtrados = window._productos.filter(p => {
+          if (!p.catalogo) return false;
+          const s = p.catalogo.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-');
+          return s === slug;
+        });
+      }
+
+      filtrados.sort((a, b) => {
+        const aV = a.estado.toLowerCase().includes('vendido');
+        const bV = b.estado.toLowerCase().includes('vendido');
+        return aV - bV;
+      });
+
+      renderProductos(filtrados);
+    });
   }
 
   /* ── Render productos ── */
@@ -523,29 +603,35 @@
     });
   }
 
-  /* ── Carga principal ── */
+  /* ── Carga principal: filtros primero, productos de fondo ── */
   async function cargarInventario() {
     try {
       const res = await fetch(SHEET_CSV);
       if (!res.ok) throw new Error('Error al cargar');
       const texto = await res.text();
-      let productos = parseCSV(texto);
+      const todosLosProductos = parseCSV(texto);
 
-      /* Filtrar según el catálogo seleccionado */
-      if (catInfo.sheetValue !== null) {
-        productos = productos.filter(p =>
-          p.catalogo && p.catalogo.toLowerCase() === catInfo.sheetValue.toLowerCase()
-        );
+      /* 1. Construir filtros inmediatamente */
+      buildFilters(todosLosProductos);
+
+      /* 2. Si el usuario ya llegó con una categoría en la URL, mostrarla */
+      if (catParam !== 'todo') {
+        let productos = todosLosProductos.filter(p => {
+          if (!p.catalogo) return false;
+          const slug = p.catalogo.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-');
+          return slug === catParam;
+        });
+        productos.sort((a, b) => {
+          const aV = a.estado.toLowerCase().includes('vendido');
+          const bV = b.estado.toLowerCase().includes('vendido');
+          return aV - bV;
+        });
+        renderProductos(productos);
       }
 
-      /* Orden: disponibles primero, vendidos al final */
-      productos.sort((a, b) => {
-        const aV = a.estado.toLowerCase().includes('vendido');
-        const bV = b.estado.toLowerCase().includes('vendido');
-        return aV - bV;
-      });
+      /* 3. Guardar todos los productos en memoria para filtrado instantáneo */
+      window._productos = todosLosProductos;
 
-      renderProductos(productos);
     } catch (err) {
       document.getElementById('productsGrid').innerHTML =
         `<div class="error-state">⚠️ No se pudo cargar el inventario.<br>Revisá tu conexión o escribinos por WhatsApp.</div>`;
