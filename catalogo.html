@@ -639,12 +639,14 @@
     try {
       const resCat  = await promCatalogos;
       const textCat = await resCat.text();
-      const filas   = parseCSV(textCat);
 
-      /* La Hoja 2 tiene una columna "catalogo" con los nombres */
-      const catalogos = filas
-        .map(f => f.catalogo || f[Object.keys(f)[0]])  // columna "catalogo" o la primera
-        .map(v => v.trim())
+      /* Parser simple: toma la primera columna de cada fila, salta encabezado */
+      const catalogos = textCat.trim().split('\n')
+        .slice(1)                          // saltar fila de encabezado
+        .map(linea => linea.split(',')[0]  // primera columna
+          .replace(/^"|"$/g, '')           // quitar comillas si las hay
+          .trim()
+        )
         .filter(Boolean);
 
       buildFiltersFromList(catalogos);
