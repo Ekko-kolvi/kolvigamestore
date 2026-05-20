@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Catálogo — Kolvi Game Store</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Rajdhani:wght@400;500;600;700&family=Crimson+Pro:ital,wght@0,400;1,400&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    :root {
+      --gold:       #C9A84C;
+      --gold-light: #F0D080;
+      --gold-dark:  #8B6914;
+      --black:      #0A0A0A;
+      --cream:      #F5EED8;
+      --cream-dark: #E8D9B0;
+      --ink:        #1A1208;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--black);
+      color: var(--cream);
+      font-family: 'Rajdhani', sans-serif;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 9999; opacity: 0.4;
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--black); }
+    ::-webkit-scrollbar-thumb { background: var(--gold-dark); border-radius: 3px; }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky;
+      top: 0; left: 0; right: 0;
+      z-index: 500;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(10,10,10,0.97);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid rgba(201,168,76,0.12);
+    }
+    .nav-logo {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: 1rem; color: var(--gold);
+      text-decoration: none; letter-spacing: 0.05em;
+    }
+    .nav-back {
+      display: flex; align-items: center; gap: 0.5rem;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 600; font-size: 0.8rem;
+      letter-spacing: 0.2em; text-transform: uppercase;
+      color: rgba(245,238,216,0.5);
+      text-decoration: none; transition: color 0.2s;
+    }
+    .nav-back:hover { color: var(--gold); }
+    .nav-back svg { width: 14px; height: 14px; }
+
+    /* ── HEADER DE PÁGINA ── */
+    .page-header {
+      padding: 3rem 1.5rem 0;
+      text-align: center;
+      background: linear-gradient(180deg, #100D00 0%, #0A0A0A 100%);
+      position: relative;
+      overflow: hidden;
+    }
+    /* Línea dorada decorativa abajo */
+    .page-header::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold-dark), transparent);
+    }
+
+    .page-header-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding-bottom: 2.5rem;
+    }
+
+    .page-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      color: var(--gold);
+      opacity: 0.6;
+      margin-bottom: 0.5rem;
+    }
+    .page-title {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: clamp(1.8rem, 5vw, 3rem);
+      font-weight: 900;
+      background: linear-gradient(180deg, var(--gold-light) 0%, var(--gold) 50%, var(--gold-dark) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.1;
+      margin-bottom: 0.5rem;
+      animation: fadeup 0.7s ease both;
+    }
+    .page-subtitle {
+      font-family: 'Crimson Pro', serif;
+      font-style: italic;
+      font-size: 1rem;
+      color: rgba(245,238,216,0.45);
+      margin-bottom: 2rem;
+      animation: fadeup 0.7s 0.15s ease both;
+    }
+    @keyframes fadeup {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── FILTROS ── */
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+      animation: fadeup 0.7s 0.25s ease both;
+    }
+    .filter-btn {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 600;
+      font-size: 0.75rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      padding: 0.45rem 1.2rem;
+      border: 1px solid rgba(201,168,76,0.25);
+      background: transparent;
+      color: rgba(245,238,216,0.45);
+      cursor: pointer;
+      transition: all 0.25s;
+      text-decoration: none;
+    }
+    .filter-btn:hover,
+    .filter-btn.active {
+      border-color: var(--gold);
+      color: var(--gold);
+      background: rgba(201,168,76,0.08);
+    }
+
+    /* ── MAIN CONTENT ── */
+    main {
+      padding: 3rem 1.5rem 5rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* ── GRILLA DE PRODUCTOS ── */
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .product-card {
+      background: linear-gradient(160deg, #161005, #0c0900);
+      border: 1px solid rgba(201,168,76,0.18);
+      overflow: hidden;
+      position: relative;
+      transition: all 0.35s;
+      display: flex;
+      flex-direction: column;
+    }
+    .product-card:hover {
+      border-color: rgba(201,168,76,0.6);
+      transform: translateY(-5px);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6), 0 0 25px rgba(201,168,76,0.1);
+    }
+
+    .product-status {
+      position: absolute;
+      top: 0.7rem; right: 0.7rem;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 0.7rem; font-weight: 700;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      padding: 0.25rem 0.7rem;
+      z-index: 2;
+    }
+    .status-disponible {
+      background: rgba(34,197,94,0.15);
+      border: 1px solid rgba(34,197,94,0.5);
+      color: #4ade80;
+    }
+    .status-vendido {
+      background: rgba(239,68,68,0.12);
+      border: 1px solid rgba(239,68,68,0.4);
+      color: #f87171;
+    }
+
+    .product-img-wrap {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      overflow: hidden;
+      background: #0a0800;
+      position: relative;
+    }
+    .product-img-wrap img {
+      width: 100%; height: 100%;
+      object-fit: contain;
+      transition: transform 0.5s ease;
+      display: block;
+    }
+    .product-card:hover .product-img-wrap img { transform: scale(1.06); }
+    .product-img-wrap .img-placeholder {
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3rem;
+      color: rgba(201,168,76,0.2);
+    }
+    .product-img-wrap::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0; height: 40%;
+      background: linear-gradient(transparent, rgba(10,8,0,0.7));
+      pointer-events: none;
+    }
+
+    .product-info {
+      padding: 1rem 1.1rem 1.2rem;
+      flex: 1; display: flex; flex-direction: column; gap: 0.3rem;
+    }
+    .product-catalog {
+      font-size: 0.7rem;
+      letter-spacing: 0.3em; text-transform: uppercase;
+      color: var(--gold); opacity: 0.6;
+    }
+    .product-name {
+      font-weight: 700; font-size: 1rem;
+      color: var(--cream); line-height: 1.3;
+    }
+    .product-price {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: 1rem; color: var(--gold);
+      margin-top: auto; padding-top: 0.6rem;
+    }
+
+    /* Botón de consultar en WhatsApp dentro de la tarjeta */
+    .product-wa {
+      display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+      margin: 0 1.1rem 1rem;
+      padding: 0.55rem 1rem;
+      background: rgba(37,211,102,0.08);
+      border: 1px solid rgba(37,211,102,0.3);
+      color: #4ade80;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 600; font-size: 0.75rem;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      text-decoration: none;
+      transition: all 0.25s;
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    .product-card:hover .product-wa {
+      opacity: 1; transform: translateY(0);
+    }
+    .product-wa:hover {
+      background: rgba(37,211,102,0.15);
+      border-color: rgba(37,211,102,0.6);
+    }
+    .product-wa svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+    .product-card.vendido { opacity: 0.5; }
+    .product-card.vendido .product-img-wrap img { filter: grayscale(60%); }
+    .product-card.vendido .product-wa { display: none; }
+
+    /* ── ESTADOS ── */
+    .loading-state, .error-state, .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 5rem 1rem;
+      color: rgba(245,238,216,0.3);
+      font-size: 1rem; letter-spacing: 0.1em;
+    }
+    .loading-dots { display: inline-flex; gap: 6px; margin-top: 1rem; }
+    .loading-dots span {
+      width: 8px; height: 8px;
+      background: var(--gold-dark); border-radius: 50%;
+      animation: dot-bounce 1.2s ease-in-out infinite;
+    }
+    .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes dot-bounce {
+      0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+      40%            { transform: translateY(-8px); opacity: 1; }
+    }
+
+    /* Contador de resultados */
+    .results-count {
+      font-size: 0.8rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(245,238,216,0.3);
+      margin-bottom: 1.5rem;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      background: #050400;
+      border-top: 1px solid rgba(201,168,76,0.15);
+      padding: 2.5rem 1.5rem; text-align: center;
+    }
+    footer .footer-logo { font-family: 'Cinzel Decorative', serif; font-size: 1.1rem; color: var(--gold); opacity: 0.7; margin-bottom: 0.5rem; }
+    footer p { font-size: 0.8rem; color: rgba(245,238,216,0.25); letter-spacing: 0.1em; }
+
+    /* ── WHATSAPP FLOAT ── */
+    .wa-float {
+      position: fixed; bottom: 2rem; right: 1.5rem;
+      z-index: 1000;
+      display: flex; align-items: center; gap: 0.6rem;
+      background: #25D366; color: white;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700; font-size: 0.9rem;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      text-decoration: none; padding: 0.85rem 1.4rem;
+      border-radius: 50px;
+      box-shadow: 0 6px 30px rgba(37,211,102,0.4);
+      animation: wa-bounce 3s ease-in-out infinite;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .wa-float:hover { transform: translateY(-3px) scale(1.04); box-shadow: 0 10px 40px rgba(37,211,102,0.6); animation: none; }
+    .wa-float svg { width: 22px; height: 22px; flex-shrink: 0; }
+    @keyframes wa-bounce {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-6px); }
+    }
+
+    @media (max-width: 600px) {
+      .products-grid { grid-template-columns: 1fr 1fr; }
+      nav { padding: 1rem; }
+    }
+    @media (max-width: 400px) {
+      .products-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="nav-logo">Kolvi 🐸</a>
+  <a href="index.html#inventario" class="nav-back">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <path d="M19 12H5M12 19l-7-7 7-7"/>
+    </svg>
+    Volver
+  </a>
+</nav>
+
+<!-- HEADER -->
+<div class="page-header">
+  <div class="page-header-inner">
+    <p class="page-label" id="pageLabel">Stock actualizado</p>
+    <h1 class="page-title" id="pageTitle">Inventario</h1>
+    <p class="page-subtitle" id="pageSubtitle">Cargando catálogo...</p>
+
+    <!-- Filtros / catálogos -->
+    <div class="filter-bar" id="filterBar">
+      <a href="catalogo.html?cat=todo"         class="filter-btn" data-cat="todo">Todos</a>
+      <a href="catalogo.html?cat=switch"        class="filter-btn" data-cat="switch">Nintendo Switch</a>
+      <a href="catalogo.html?cat=playstation"   class="filter-btn" data-cat="playstation">PlayStation</a>
+      <a href="catalogo.html?cat=retro"         class="filter-btn" data-cat="retro">Retro & DS</a>
+      <a href="catalogo.html?cat=figuras"       class="filter-btn" data-cat="figuras">Anime & Figuras</a>
+    </div>
+  </div>
+</div>
+
+<!-- PRODUCTOS -->
+<main>
+  <p class="results-count" id="resultsCount"></p>
+  <div class="products-grid" id="productsGrid">
+    <div class="loading-state">
+      Cargando inventario
+      <div class="loading-dots"><span></span><span></span><span></span></div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <p class="footer-logo">Kolvi Game Store</p>
+  <p>&copy; 2025 kolvigamestore.com &mdash; Todos los derechos reservados</p>
+</footer>
+
+<a
+  href="https://wa.me/50685842985?text=Hola%20Kolvi!%20Vi%20tu%20p%C3%A1gina%20%F0%9F%90%B8"
+  target="_blank" rel="noopener" class="wa-float" aria-label="Contactar por WhatsApp"
+>
+  <svg viewBox="0 0 24 24" fill="currentColor">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+    <path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.122 1.528 5.855L0 24l6.335-1.652A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.9 0-3.681-.52-5.21-1.426l-.374-.222-3.884 1.013 1.036-3.782-.245-.39A9.961 9.961 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
+  </svg>
+  WhatsApp
+</a>
+
+<script>
+  /* ═══════════════════════════════════════════════════════
+     CONFIGURACIÓN — Google Sheets CSV
+     Misma URL que en index.html
+  ══════════════════════════════════════════════════════ */
+  const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTsSGxthS53I8A8Jq5lUKOMlLsfPVHOwEITsF1kFXfdFexMpTaYan1ESSx3FvwGm-nRyd1fzlJpKHtB/pub?gid=0&single=true&output=csv';
+
+  /* ═══════════════════════════════════════════════════════
+     MAPEO: parámetro URL → columna "Catálogo" del Sheet
+     Ajustá los valores de la derecha para que coincidan
+     exactamente con lo que escribiste en Google Sheets.
+  ══════════════════════════════════════════════════════ */
+  const CATALOG_MAP = {
+    'todo':        { label: 'Todo el inventario',  subtitle: 'Todo lo disponible en este momento.', sheetValue: null },
+    'switch':      { label: 'Nintendo Switch',     subtitle: 'Consolas, Joy-Cons y juegos para Switch.', sheetValue: 'Nintendo Switch' },
+    'playstation': { label: 'PlayStation',         subtitle: 'PS4, PS5 y títulos para todos los gustos.', sheetValue: 'PlayStation' },
+    'retro':       { label: 'Retro & DS',          subtitle: 'Clásicos que nunca pasan de moda.', sheetValue: 'Retro & DS' },
+    'figuras':     { label: 'Anime & Figuras',     subtitle: 'Dragon Ball y coleccionables de edición limitada.', sheetValue: 'Anime & Figuras' },
+  };
+
+  /* ── Leer parámetro de la URL ── */
+  const params = new URLSearchParams(window.location.search);
+  const catParam = (params.get('cat') || 'todo').toLowerCase();
+  const catInfo  = CATALOG_MAP[catParam] || CATALOG_MAP['todo'];
+
+  /* ── Actualizar encabezados con el catálogo seleccionado ── */
+  document.title = `${catInfo.label} — Kolvi Game Store`;
+  document.getElementById('pageTitle').textContent    = catInfo.label;
+  document.getElementById('pageSubtitle').textContent = catInfo.subtitle;
+
+  /* ── Marcar el filtro activo en la barra ── */
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    if (btn.dataset.cat === catParam) btn.classList.add('active');
+  });
+
+  /* ── Parse CSV ── */
+  function parseCSV(texto) {
+    const lineas = texto.trim().split('\n');
+    const encabezados = lineas[0].split(',').map(h =>
+      h.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    );
+    return lineas.slice(1).map(linea => {
+      const cols = [];
+      let dentro = false, celda = '';
+      for (let c of linea) {
+        if (c === '"') { dentro = !dentro; }
+        else if (c === ',' && !dentro) { cols.push(celda.trim()); celda = ''; }
+        else { celda += c; }
+      }
+      cols.push(celda.trim());
+      const obj = {};
+      encabezados.forEach((h, i) => { obj[h] = cols[i] || ''; });
+      return obj;
+    }).filter(p => p.nombre);
+  }
+
+  /* ── Render productos ── */
+  function renderProductos(productos) {
+    const grid = document.getElementById('productsGrid');
+    const count = document.getElementById('resultsCount');
+
+    if (!productos.length) {
+      grid.innerHTML = '<div class="empty-state">No hay productos en esta categoría por el momento.</div>';
+      count.textContent = '';
+      return;
+    }
+
+    const disponibles = productos.filter(p => !p.estado.toLowerCase().includes('vendido')).length;
+    count.textContent = `${disponibles} disponible${disponibles !== 1 ? 's' : ''} · ${productos.length} total`;
+
+    grid.innerHTML = productos.map(p => {
+      const esVendido   = p.estado && p.estado.toLowerCase().includes('vendido');
+      const statusClass = esVendido ? 'status-vendido' : 'status-disponible';
+      const statusText  = esVendido ? 'Vendido' : 'Disponible';
+      const cardClass   = esVendido ? 'product-card vendido' : 'product-card';
+
+      const imgHTML = p.imagen
+        ? `<img src="${p.imagen}" alt="${p.nombre}" loading="lazy"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+        : '';
+      const placeholderHTML = `<div class="img-placeholder" style="display:${p.imagen ? 'none' : 'flex'}">🎮</div>`;
+
+      // Link de WhatsApp con el nombre del producto pre-cargado
+      const waMsg = encodeURIComponent(`Hola Kolvi! 🐸 Me interesa el producto: ${p.nombre}. ¿Está disponible?`);
+      const waLink = `https://wa.me/50685842985?text=${waMsg}`;
+
+      return `
+        <div class="${cardClass}">
+          <span class="product-status ${statusClass}">${statusText}</span>
+          <div class="product-img-wrap">
+            ${imgHTML}
+            ${placeholderHTML}
+          </div>
+          <div class="product-info">
+            <p class="product-catalog">${p.catalogo || ''}</p>
+            <p class="product-name">${p.nombre}</p>
+            <p class="product-price">${p.precio || ''}</p>
+          </div>
+          <a href="${waLink}" target="_blank" rel="noopener" class="product-wa">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+              <path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.122 1.528 5.855L0 24l6.335-1.652A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.9 0-3.681-.52-5.21-1.426l-.374-.222-3.884 1.013 1.036-3.782-.245-.39A9.961 9.961 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
+            </svg>
+            Consultar
+          </a>
+        </div>`;
+    }).join('');
+
+    /* Animación de entrada escalonada */
+    grid.querySelectorAll('.product-card').forEach((card, i) => {
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(20px)';
+      card.style.transition = `opacity 0.4s ease ${i * 0.04}s, transform 0.4s ease ${i * 0.04}s`;
+      setTimeout(() => {
+        card.style.opacity = card.classList.contains('vendido') ? '0.5' : '1';
+        card.style.transform = 'translateY(0)';
+      }, 50);
+    });
+  }
+
+  /* ── Carga principal ── */
+  async function cargarInventario() {
+    try {
+      const res = await fetch(SHEET_CSV);
+      if (!res.ok) throw new Error('Error al cargar');
+      const texto = await res.text();
+      let productos = parseCSV(texto);
+
+      /* Filtrar según el catálogo seleccionado */
+      if (catInfo.sheetValue !== null) {
+        productos = productos.filter(p =>
+          p.catalogo && p.catalogo.toLowerCase() === catInfo.sheetValue.toLowerCase()
+        );
+      }
+
+      /* Orden: disponibles primero, vendidos al final */
+      productos.sort((a, b) => {
+        const aV = a.estado.toLowerCase().includes('vendido');
+        const bV = b.estado.toLowerCase().includes('vendido');
+        return aV - bV;
+      });
+
+      renderProductos(productos);
+    } catch (err) {
+      document.getElementById('productsGrid').innerHTML =
+        `<div class="error-state">⚠️ No se pudo cargar el inventario.<br>Revisá tu conexión o escribinos por WhatsApp.</div>`;
+      console.error(err);
+    }
+  }
+
+  cargarInventario();
+</script>
+
+</body>
+</html>
