@@ -179,25 +179,7 @@
       box-shadow: 0 20px 50px rgba(0,0,0,0.6), 0 0 25px rgba(201,168,76,0.1);
     }
 
-    .product-status {
-      position: absolute;
-      top: 0.7rem; right: 0.7rem;
-      font-family: 'Rajdhani', sans-serif;
-      font-size: 0.7rem; font-weight: 700;
-      letter-spacing: 0.15em; text-transform: uppercase;
-      padding: 0.25rem 0.7rem;
-      z-index: 2;
-    }
-    .status-disponible {
-      background: rgba(34,197,94,0.15);
-      border: 1px solid rgba(34,197,94,0.5);
-      color: #4ade80;
-    }
-    .status-vendido {
-      background: rgba(239,68,68,0.12);
-      border: 1px solid rgba(239,68,68,0.4);
-      color: #f87171;
-    }
+
 
     .product-img-wrap {
       width: 100%;
@@ -271,9 +253,6 @@
     }
     .product-wa svg { width: 14px; height: 14px; flex-shrink: 0; }
 
-    .product-card.vendido { opacity: 0.5; }
-    .product-card.vendido .product-img-wrap img { filter: grayscale(60%); }
-    .product-card.vendido .product-wa { display: none; }
 
     /* ── MENSAJE "SELECCIONÁ UNA CATEGORÍA" ── */
     .select-prompt {
@@ -431,18 +410,21 @@
 <script>
   /* ═══════════════════════════════════════════════════════
      CONFIGURACIÓN — Google Sheets CSV
-     Misma URL que en index.html
+     Hoja 1: productos completos
+     Hoja 2: lista de catálogos (carga rápida)
   ══════════════════════════════════════════════════════ */
-  const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTsSGxthS53I8A8Jq5lUKOMlLsfPVHOwEITsF1kFXfdFexMpTaYan1ESSx3FvwGm-nRyd1fzlJpKHtB/pub?gid=0&single=true&output=csv';
+  const SHEET_PRODUCTOS  = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTsSGxthS53I8A8Jq5lUKOMlLsfPVHOwEITsF1kFXfdFexMpTaYan1ESSx3FvwGm-nRyd1fzlJpKHtB/pub?gid=0&single=true&output=csv';
+  const SHEET_CATALOGOS  = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTsSGxthS53I8A8Jq5lUKOMlLsfPVHOwEITsF1kFXfdFexMpTaYan1ESSx3FvwGm-nRyd1fzlJpKHtB/pub?gid=1158203332&single=true&output=csv';
 
   /* ── Leer parámetro de la URL ── */
-  const params = new URLSearchParams(window.location.search);
+  const params   = new URLSearchParams(window.location.search);
   const catParam = (params.get('cat') || 'todo').toLowerCase();
 
-  /* ── Marcar título inicial mientras carga ── */
-  document.getElementById('pageSubtitle').textContent = 'Cargando catálogo...';
+  /* ── Helper: slug consistente ── */
+  const toSlug = str =>
+    str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-');
 
-  /* ── Parse CSV ── */
+  /* ── Parse CSV genérico ── */
   function parseCSV(texto) {
     const lineas = texto.trim().split('\n');
     const encabezados = lineas[0].split(',').map(h =>
@@ -460,26 +442,25 @@
       const obj = {};
       encabezados.forEach((h, i) => { obj[h] = cols[i] || ''; });
       return obj;
-    }).filter(p => p.nombre);
+    });
   }
 
-  /* ── Construir filtros dinámicamente desde el Sheet ── */
-  function buildFilters(productos) {
+  /* ── FASE 1: Construir filtros desde la Hoja 2 (catálogos) ── */
+  function buildFiltersFromList(catalogos) {
     const bar = document.getElementById('filterBar');
-    const catalogos = [...new Set(productos.map(p => p.catalogo).filter(Boolean))];
 
     catalogos.forEach(cat => {
-      const slug = cat.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-');
-      const btn = document.createElement('button');
-      btn.className = 'filter-btn';
-      btn.dataset.cat = slug;
-      btn.dataset.label = cat;
-      btn.textContent = cat;
+      const slug = toSlug(cat);
+      const btn  = document.createElement('button');
+      btn.className      = 'filter-btn';
+      btn.dataset.cat    = slug;
+      btn.dataset.label  = cat;
+      btn.textContent    = cat;
       bar.appendChild(btn);
     });
 
-    /* Marcar el activo y actualizar título */
-    let tituloActivo = 'Inventario';
+    /* Marcar activo y actualizar título */
+    let tituloActivo    = 'Inventario';
     let subtituloActivo = 'Seleccioná una categoría para ver el stock.';
 
     bar.querySelectorAll('.filter-btn').forEach(btn => {
@@ -492,13 +473,20 @@
 
     if (catParam === 'todo') {
       bar.querySelector('[data-cat="todo"]').classList.add('active');
+      subtituloActivo = 'Todo el stock disponible.';
     }
 
     document.title = `${tituloActivo} — Kolvi Game Store`;
     document.getElementById('pageTitle').textContent    = tituloActivo;
     document.getElementById('pageSubtitle').textContent = subtituloActivo;
 
-    /* Click en filtro: filtra en memoria, sin recargar la página */
+    /* Si hay categoría activa en URL, mostrar spinner mientras llegan productos */
+    if (catParam !== 'todo') {
+      document.getElementById('productsGrid').innerHTML =
+        `<div class="loading-state">Cargando productos<div class="loading-dots"><span></span><span></span><span></span></div></div>`;
+    }
+
+    /* ── Clicks en filtros ── */
     bar.addEventListener('click', e => {
       const btn = e.target.closest('.filter-btn');
       if (!btn) return;
@@ -512,66 +500,59 @@
       document.getElementById('pageTitle').textContent    = slug === 'todo' ? 'Inventario' : label;
       document.getElementById('pageSubtitle').textContent = slug === 'todo' ? 'Todo el stock disponible.' : `Stock disponible en ${label}.`;
 
-      /* Si los productos aún no cargaron, mostrar spinner */
+      /* Productos aún no llegaron → spinner */
       if (!window._productos) {
         document.getElementById('productsGrid').innerHTML =
-          `<div class="loading-state">Cargando<div class="loading-dots"><span></span><span></span><span></span></div></div>`;
+          `<div class="loading-state">Cargando productos<div class="loading-dots"><span></span><span></span><span></span></div></div>`;
+        /* Guardar el filtro pendiente para aplicarlo cuando lleguen */
+        window._pendingFilter = slug;
         return;
       }
 
-      /* Ocultar el mensaje y mostrar productos */
-      let filtrados = window._productos;
-      if (slug !== 'todo') {
-        filtrados = window._productos.filter(p => {
-          if (!p.catalogo) return false;
-          const s = p.catalogo.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-');
-          return s === slug;
-        });
-      }
-
-      filtrados.sort((a, b) => {
-        const aV = a.estado.toLowerCase().includes('vendido');
-        const bV = b.estado.toLowerCase().includes('vendido');
-        return aV - bV;
-      });
-
-      renderProductos(filtrados);
+      aplicarFiltro(slug);
     });
   }
 
-  /* ── Render productos ── */
+  /* ── Filtrar y renderizar (solo disponibles) ── */
+  function aplicarFiltro(slug) {
+    let filtrados = window._productos.filter(p =>
+      !p.estado.toLowerCase().includes('vendido')
+    );
+    if (slug !== 'todo') {
+      filtrados = filtrados.filter(p => {
+        if (!p.catalogo) return false;
+        return toSlug(p.catalogo) === slug;
+      });
+    }
+    renderProductos(filtrados);
+  }
+
+  /* ── Render tarjetas de productos ── */
   function renderProductos(productos) {
-    const grid = document.getElementById('productsGrid');
+    const grid  = document.getElementById('productsGrid');
     const count = document.getElementById('resultsCount');
 
     if (!productos.length) {
-      grid.innerHTML = '<div class="empty-state">No hay productos en esta categoría por el momento.</div>';
+      grid.innerHTML    = '<div class="empty-state">No hay productos en esta categoría por el momento.</div>';
       count.textContent = '';
       return;
     }
 
-    const disponibles = productos.filter(p => !p.estado.toLowerCase().includes('vendido')).length;
-    count.textContent = `${disponibles} disponible${disponibles !== 1 ? 's' : ''} · ${productos.length} total`;
+    const disponibles = productos.length;
+    count.textContent = `${disponibles} producto${disponibles !== 1 ? 's' : ''} disponible${disponibles !== 1 ? 's' : ''}`;
 
     grid.innerHTML = productos.map(p => {
-      const esVendido   = p.estado && p.estado.toLowerCase().includes('vendido');
-      const statusClass = esVendido ? 'status-vendido' : 'status-disponible';
-      const statusText  = esVendido ? 'Vendido' : 'Disponible';
-      const cardClass   = esVendido ? 'product-card vendido' : 'product-card';
-
-      const imgHTML = p.imagen
+      const imgHTML         = p.imagen
         ? `<img src="${p.imagen}" alt="${p.nombre}" loading="lazy"
                onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
         : '';
       const placeholderHTML = `<div class="img-placeholder" style="display:${p.imagen ? 'none' : 'flex'}">🎮</div>`;
 
-      // Link de WhatsApp con el nombre del producto pre-cargado
-      const waMsg = encodeURIComponent(`Hola Kolvi! 🐸 Me interesa el producto: ${p.nombre}. ¿Está disponible?`);
+      const waMsg  = encodeURIComponent(`Hola Kolvi! 🐸 Me interesa el producto: ${p.nombre}. ¿Está disponible?`);
       const waLink = `https://wa.me/50685842985?text=${waMsg}`;
 
       return `
-        <div class="${cardClass}">
-          <span class="product-status ${statusClass}">${statusText}</span>
+        <div class="product-card">
           <div class="product-img-wrap">
             ${imgHTML}
             ${placeholderHTML}
@@ -593,44 +574,65 @@
 
     /* Animación de entrada escalonada */
     grid.querySelectorAll('.product-card').forEach((card, i) => {
-      card.style.opacity = '0';
-      card.style.transform = 'translateY(20px)';
+      card.style.opacity    = '0';
+      card.style.transform  = 'translateY(20px)';
       card.style.transition = `opacity 0.4s ease ${i * 0.04}s, transform 0.4s ease ${i * 0.04}s`;
       setTimeout(() => {
-        card.style.opacity = card.classList.contains('vendido') ? '0.5' : '1';
+        card.style.opacity   = '1';
         card.style.transform = 'translateY(0)';
       }, 50);
     });
   }
 
-  /* ── Carga principal: filtros primero, productos de fondo ── */
-  async function cargarInventario() {
+  /* ══════════════════════════════════════════════════════
+     INICIO: Carga en dos fases paralelas
+     - Fase 1 (rápida): Hoja 2 → filtros visibles al instante
+     - Fase 2 (fondo):  Hoja 1 → productos se llenan después
+  ══════════════════════════════════════════════════════ */
+  async function init() {
+    /* Lanzar ambas peticiones al mismo tiempo */
+    const [promCatalogos, promProductos] = [
+      fetch(SHEET_CATALOGOS),
+      fetch(SHEET_PRODUCTOS)
+    ];
+
+    /* ── FASE 1: catálogos (llegan primero, hoja pequeña) ── */
     try {
-      const res = await fetch(SHEET_CSV);
-      if (!res.ok) throw new Error('Error al cargar');
-      const texto = await res.text();
-      const todosLosProductos = parseCSV(texto);
+      const resCat  = await promCatalogos;
+      const textCat = await resCat.text();
+      const filas   = parseCSV(textCat);
 
-      /* 1. Construir filtros inmediatamente */
-      buildFilters(todosLosProductos);
+      /* La Hoja 2 tiene una columna "catalogo" con los nombres */
+      const catalogos = filas
+        .map(f => f.catalogo || f[Object.keys(f)[0]])  // columna "catalogo" o la primera
+        .map(v => v.trim())
+        .filter(Boolean);
 
-      /* 2. Si el usuario ya llegó con una categoría en la URL, mostrarla */
-      if (catParam !== 'todo') {
-        let productos = todosLosProductos.filter(p => {
-          if (!p.catalogo) return false;
-          const slug = p.catalogo.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-');
-          return slug === catParam;
-        });
-        productos.sort((a, b) => {
-          const aV = a.estado.toLowerCase().includes('vendido');
-          const bV = b.estado.toLowerCase().includes('vendido');
-          return aV - bV;
-        });
-        renderProductos(productos);
+      buildFiltersFromList(catalogos);
+    } catch (err) {
+      console.warn('No se pudo cargar la hoja de catálogos:', err);
+      /* Fallback: mostrar solo el botón "Todos" que ya existe */
+    }
+
+    /* ── FASE 2: productos completos (llegan después, hoja grande) ── */
+    try {
+      const resProd  = await promProductos;
+      const textProd = await resProd.text();
+      const todos    = parseCSV(textProd).filter(p => p.nombre);
+
+      window._productos = todos;
+
+      /* Si había un filtro pendiente (click antes de que llegaran los datos) */
+      if (window._pendingFilter) {
+        aplicarFiltro(window._pendingFilter);
+        window._pendingFilter = null;
+        return;
       }
 
-      /* 3. Guardar todos los productos en memoria para filtrado instantáneo */
-      window._productos = todosLosProductos;
+      /* Si la URL ya traía una categoría, renderizarla ahora */
+      if (catParam !== 'todo') {
+        aplicarFiltro(catParam);
+      }
 
     } catch (err) {
       document.getElementById('productsGrid').innerHTML =
@@ -639,7 +641,7 @@
     }
   }
 
-  cargarInventario();
+  init();
 </script>
 
 </body>
