@@ -1207,7 +1207,7 @@
       const obj = {};
       encabezados.forEach((h, i) => { obj[h] = cols[i] || ''; });
       return obj;
-    }).filter(p => p.nombre); // descarta filas vacías
+    }).filter(p => p.nombre && !p.estado.toLowerCase().includes('vendido')); // descarta filas vacías
   }
 
   /* renderProductos: construye el HTML de las tarjetas y lo inyecta en la grilla */
