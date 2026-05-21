@@ -701,7 +701,7 @@
         : '';
       const placeholderHTML = `<div class="img-placeholder" style="display:${p.imagen ? 'none' : 'flex'}">🎮</div>`;
 
-      const waMsg  = encodeURIComponent(`Hola Kolvi! 🐸 Me interesa el producto: ${p.nombre}. ¿Está disponible?`);
+      const waMsg  = encodeURIComponent(`Hola Kolvi! Me interesa el producto: ${p.nombre} por un precio de ${p.precio}.`);
       const waLink = `https://wa.me/50685842985?text=${waMsg}`;
 
       return `
