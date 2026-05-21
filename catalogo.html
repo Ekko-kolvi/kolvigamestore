@@ -323,6 +323,31 @@
     footer .footer-logo { font-family: 'Cinzel Decorative', serif; font-size: 1.1rem; color: var(--gold); opacity: 0.7; margin-bottom: 0.5rem; }
     footer p { font-size: 0.8rem; color: rgba(245,238,216,0.25); letter-spacing: 0.1em; }
 
+    /* ── SCROLL TO TOP ── */
+    .scroll-top {
+      position: fixed; bottom: 6.5rem; right: 1.5rem;
+      z-index: 1000;
+      width: 44px; height: 44px;
+      background: rgba(201,168,76,0.12);
+      border: 1px solid rgba(201,168,76,0.4);
+      color: var(--gold);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      opacity: 0; pointer-events: none;
+      transform: translateY(10px);
+      transition: opacity 0.3s, transform 0.3s, background 0.2s;
+    }
+    .scroll-top.visible {
+      opacity: 1; pointer-events: all;
+      transform: translateY(0);
+    }
+    .scroll-top:hover {
+      background: rgba(201,168,76,0.22);
+      border-color: var(--gold);
+    }
+    .scroll-top svg { width: 18px; height: 18px; }
+
     /* ── WHATSAPP FLOAT ── */
     .wa-float {
       position: fixed; bottom: 2rem; right: 1.5rem;
@@ -344,6 +369,51 @@
       0%, 100% { transform: translateY(0); }
       50%       { transform: translateY(-6px); }
     }
+
+    /* ── BARRA DE BÚSQUEDA ── */
+    .search-wrap {
+      max-width: 480px;
+      margin: 1.5rem auto 0;
+      position: relative;
+      animation: fadeup 0.7s 0.3s ease both;
+    }
+    .search-input {
+      width: 100%;
+      background: rgba(201,168,76,0.05);
+      border: 1px solid rgba(201,168,76,0.25);
+      color: var(--cream);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 0.9rem;
+      letter-spacing: 0.08em;
+      padding: 0.65rem 1rem 0.65rem 2.8rem;
+      outline: none;
+      transition: border-color 0.25s, background 0.25s;
+    }
+    .search-input::placeholder { color: rgba(245,238,216,0.25); }
+    .search-input:focus {
+      border-color: var(--gold);
+      background: rgba(201,168,76,0.08);
+    }
+    .search-icon {
+      position: absolute;
+      left: 0.85rem; top: 50%;
+      transform: translateY(-50%);
+      width: 16px; height: 16px;
+      color: rgba(201,168,76,0.45);
+      pointer-events: none;
+    }
+    .search-clear {
+      position: absolute;
+      right: 0.75rem; top: 50%;
+      transform: translateY(-50%);
+      background: none; border: none;
+      color: rgba(245,238,216,0.3);
+      cursor: pointer; font-size: 1rem;
+      display: none; line-height: 1;
+      padding: 0;
+    }
+    .search-clear.visible { display: block; }
+    .search-clear:hover { color: var(--gold); }
 
     @media (max-width: 600px) {
       .products-grid { grid-template-columns: 1fr 1fr; }
@@ -378,6 +448,20 @@
     <div class="filter-bar" id="filterBar">
       <button class="filter-btn" data-cat="todo" data-label="Inventario">Todos</button>
     </div>
+
+    <!-- Búsqueda -->
+    <div class="search-wrap">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+      </svg>
+      <input
+        type="text"
+        id="searchInput"
+        class="search-input"
+        placeholder="Buscar en todo el catálogo..."
+        autocomplete="off"
+      />
+    </div>
   </div>
 </div>
 
@@ -396,6 +480,13 @@
   <p class="footer-logo">Kolvi Game Store</p>
   <p>&copy; 2025 kolvigamestore.com &mdash; Todos los derechos reservados</p>
 </footer>
+
+<!-- SCROLL TO TOP -->
+<button class="scroll-top" id="scrollTop" aria-label="Volver arriba">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+    <path d="M12 19V5M5 12l7-7 7 7"/>
+  </svg>
+</button>
 
 <a
   href="https://wa.me/50685842985?text=Hola%20Kolvi!%20Vi%20tu%20p%C3%A1gina%20%F0%9F%90%B8"
@@ -507,9 +598,7 @@
       }
     });
 
-    if (catParam === 'todo') {
-      bar.querySelector('[data-cat="todo"]').classList.add('active');
-    }
+    /* El botón "Todos" nunca se marca como activo */
 
     document.title = `${tituloActivo} — Kolvi Game Store`;
     document.getElementById('pageTitle').textContent    = tituloActivo;
@@ -529,6 +618,46 @@
       document.getElementById('pageTitle').textContent    = slug === 'todo' ? 'Inventario' : label;
       document.getElementById('pageSubtitle').textContent = slug === 'todo' ? 'Todo el stock disponible.' : `Stock disponible en ${label}.`;
 
+      aplicarFiltro(slug);
+    });
+  }
+
+    /* ── Búsqueda en tiempo real ── */
+    const searchInput = document.getElementById('searchInput');
+    const searchClear = document.getElementById('searchClear');
+
+    searchInput.addEventListener('input', () => {
+      const query = searchInput.value.trim();
+      searchClear.classList.toggle('visible', query.length > 0);
+
+      if (query.length === 0) {
+        const activeBtn = bar.querySelector('.filter-btn.active');
+        const slug = activeBtn ? activeBtn.dataset.cat : 'todo';
+        aplicarFiltro(slug);
+        return;
+      }
+
+      /* Busca en TODO el catálogo, ignorando el filtro activo */
+      const palabras = query.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').split(/\s+/);
+      const resultados = window._productos.filter(p => {
+        const haystack = (p.nombre + ' ' + p.catalogo).toLowerCase()
+          .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        return palabras.every(pal => haystack.includes(pal));
+      });
+
+      document.getElementById('pageTitle').textContent    = 'Búsqueda';
+      document.getElementById('pageSubtitle').textContent = `Resultados para "${query}"`;
+      renderProductos(resultados);
+    });
+
+    searchClear.addEventListener('click', () => {
+      searchInput.value = '';
+      searchClear.classList.remove('visible');
+      const activeBtn = bar.querySelector('.filter-btn.active');
+      const slug = activeBtn ? activeBtn.dataset.cat : 'todo';
+      const label = activeBtn ? (activeBtn.dataset.label || activeBtn.textContent) : 'Inventario';
+      document.getElementById('pageTitle').textContent    = slug === 'todo' ? 'Inventario' : label;
+      document.getElementById('pageSubtitle').textContent = slug === 'todo' ? 'Seleccioná una categoría.' : `Stock disponible en ${label}.`;
       aplicarFiltro(slug);
     });
   }
@@ -633,6 +762,15 @@
   }
 
   init();
+
+  /* ── Scroll to top ── */
+  const scrollTopBtn = document.getElementById('scrollTop');
+  window.addEventListener('scroll', () => {
+    scrollTopBtn.classList.toggle('visible', window.scrollY > 400);
+  });
+  scrollTopBtn.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
 </script>
 
 </body>
