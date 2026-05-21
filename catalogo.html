@@ -4,12 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Catálogo — Kolvi Game Store</title>
-  <meta property="og:title" content="Catálogo — Kolvi Game Store" />
-  <meta property="og:description" content="Explorá consolas, videojuegos, accesorios y figuras de colección en Costa Rica. Stock actualizado, nuevos y usados. Consultá por WhatsApp." />
-  <meta property="og:image" content="https://kolvigamestore.com/frog-logo.png" />
-  <meta property="og:url" content="https://kolvigamestore.com/catalogo.html" />
-  <meta property="og:type" content="website" />
-  <meta name="description" content="Explorá el inventario de Kolvi Game Store — consolas, videojuegos, accesorios y figuras de colección en Costa Rica. Stock actualizado, nuevos y usados. Consultá por WhatsApp." />
   <link
     href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Rajdhani:wght@400;500;600;700&family=Crimson+Pro:ital,wght@0,400;1,400&display=swap"
     rel="stylesheet"
@@ -416,12 +410,9 @@
 
 <script>
   /* ═══════════════════════════════════════════════════════
-     CONFIGURACIÓN — Google Sheets CSV
-     Hoja 1: productos completos
-     Hoja 2: lista de catálogos (carga rápida)
+     CONFIGURACIÓN — Una sola hoja: solo productos disponibles
   ══════════════════════════════════════════════════════ */
-  const SHEET_PRODUCTOS  = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTsSGxthS53I8A8Jq5lUKOMlLsfPVHOwEITsF1kFXfdFexMpTaYan1ESSx3FvwGm-nRyd1fzlJpKHtB/pub?gid=0&single=true&output=csv';
-  const SHEET_CATALOGOS  = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTsSGxthS53I8A8Jq5lUKOMlLsfPVHOwEITsF1kFXfdFexMpTaYan1ESSx3FvwGm-nRyd1fzlJpKHtB/pub?gid=1158203332&single=true&output=csv';
+  const SHEET_PRODUCTOS = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTsSGxthS53I8A8Jq5lUKOMlLsfPVHOwEITsF1kFXfdFexMpTaYan1ESSx3FvwGm-nRyd1fzlJpKHtB/pub?gid=0&single=true&output=csv';
 
   /* ── Leer parámetro de la URL ── */
   const params   = new URLSearchParams(window.location.search);
@@ -432,35 +423,32 @@
     str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-');
 
   /* ── Columnas públicas que nos interesan (normalizadas) ── */
-  const COLS_PUBLICAS = ['imagen', 'catalogo', 'nombre', 'precio', 'estado'];
+  const COLS_PUBLICAS = ['imagen', 'catalogo', 'nombre', 'precio'];
 
   /* ── Normalizar texto para comparar encabezados ── */
   const norm = s => s.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
-  /* ── Parse CSV robusto: maneja celdas con saltos de línea y comas ── */
+  /* ── Parse CSV robusto ── */
   function parseCSV(texto) {
-    /* Tokenizar carácter a carácter para no romper con \n dentro de comillas */
     const tokens = [];
     let celda = '', enComillas = false;
 
     for (let i = 0; i < texto.length; i++) {
       const c = texto[i];
       if (c === '"') {
-        /* Comilla doble escapada ("") dentro de un campo */
         if (enComillas && texto[i + 1] === '"') { celda += '"'; i++; }
         else { enComillas = !enComillas; }
       } else if (c === ',' && !enComillas) {
         tokens.push(celda); celda = '';
       } else if ((c === '\n' || (c === '\r' && texto[i + 1] === '\n')) && !enComillas) {
-        if (c === '\r') i++; /* saltar \r de \r\n */
+        if (c === '\r') i++;
         tokens.push(celda); tokens.push('\n'); celda = '';
       } else {
         celda += c;
       }
     }
-    tokens.push(celda); /* última celda */
+    tokens.push(celda);
 
-    /* Separar en filas usando el marcador '\n' */
     const filas = [];
     let fila = [];
     for (const t of tokens) {
@@ -468,10 +456,8 @@
       else            { fila.push(t.trim()); }
     }
     if (fila.length) filas.push(fila);
-
     if (filas.length < 2) return [];
 
-    /* Mapear índices de encabezados a columnas públicas */
     const headers = filas[0].map(norm);
     const idx = {};
     COLS_PUBLICAS.forEach(col => {
@@ -479,7 +465,6 @@
       if (i !== -1) idx[col] = i;
     });
 
-    /* Construir objetos solo con las columnas públicas */
     return filas.slice(1)
       .map(cols => {
         const obj = {};
@@ -488,26 +473,31 @@
         });
         return obj;
       })
-      .filter(p => p.nombre); /* ignorar filas vacías */
+      .filter(p => p.nombre);
   }
 
-  /* ── FASE 1: Construir filtros desde la Hoja 2 (catálogos) ── */
-  function buildFiltersFromList(catalogos) {
+  /* ── Construir filtros desde los catálogos únicos de los productos ── */
+  function buildFilters(productos) {
     const bar = document.getElementById('filterBar');
 
-    catalogos.forEach(cat => {
+    /* Extraer catálogos únicos en el orden que aparecen */
+    const catalogosUnicos = [...new Set(
+      productos.map(p => p.catalogo).filter(Boolean)
+    )];
+
+    catalogosUnicos.forEach(cat => {
       const slug = toSlug(cat);
       const btn  = document.createElement('button');
-      btn.className      = 'filter-btn';
-      btn.dataset.cat    = slug;
-      btn.dataset.label  = cat;
-      btn.textContent    = cat;
+      btn.className     = 'filter-btn';
+      btn.dataset.cat   = slug;
+      btn.dataset.label = cat;
+      btn.textContent   = cat;
       bar.appendChild(btn);
     });
 
-    /* Marcar activo y actualizar título */
+    /* Marcar activo según URL */
     let tituloActivo    = 'Inventario';
-    let subtituloActivo = 'Seleccioná una categoría para ver el stock.';
+    let subtituloActivo = 'Todo el stock disponible.';
 
     bar.querySelectorAll('.filter-btn').forEach(btn => {
       if (btn.dataset.cat === catParam) {
@@ -519,18 +509,11 @@
 
     if (catParam === 'todo') {
       bar.querySelector('[data-cat="todo"]').classList.add('active');
-      subtituloActivo = 'Todo el stock disponible.';
     }
 
     document.title = `${tituloActivo} — Kolvi Game Store`;
     document.getElementById('pageTitle').textContent    = tituloActivo;
     document.getElementById('pageSubtitle').textContent = subtituloActivo;
-
-    /* Si hay categoría activa en URL, mostrar spinner mientras llegan productos */
-    if (catParam !== 'todo') {
-      document.getElementById('productsGrid').innerHTML =
-        `<div class="loading-state">Cargando productos<div class="loading-dots"><span></span><span></span><span></span></div></div>`;
-    }
 
     /* ── Clicks en filtros ── */
     bar.addEventListener('click', e => {
@@ -546,34 +529,20 @@
       document.getElementById('pageTitle').textContent    = slug === 'todo' ? 'Inventario' : label;
       document.getElementById('pageSubtitle').textContent = slug === 'todo' ? 'Todo el stock disponible.' : `Stock disponible en ${label}.`;
 
-      /* Productos aún no llegaron → spinner */
-      if (!window._productos) {
-        document.getElementById('productsGrid').innerHTML =
-          `<div class="loading-state">Cargando productos<div class="loading-dots"><span></span><span></span><span></span></div></div>`;
-        /* Guardar el filtro pendiente para aplicarlo cuando lleguen */
-        window._pendingFilter = slug;
-        return;
-      }
-
       aplicarFiltro(slug);
     });
   }
 
-  /* ── Filtrar y renderizar (solo disponibles) ── */
+  /* ── Filtrar y renderizar ── */
   function aplicarFiltro(slug) {
-    let filtrados = window._productos.filter(p =>
-      !p.estado.toLowerCase().includes('vendido')
-    );
+    let filtrados = window._productos;
     if (slug !== 'todo') {
-      filtrados = filtrados.filter(p => {
-        if (!p.catalogo) return false;
-        return toSlug(p.catalogo) === slug;
-      });
+      filtrados = filtrados.filter(p => p.catalogo && toSlug(p.catalogo) === slug);
     }
     renderProductos(filtrados);
   }
 
-  /* ── Render tarjetas de productos ── */
+  /* ── Render tarjetas ── */
   function renderProductos(productos) {
     const grid  = document.getElementById('productsGrid');
     const count = document.getElementById('resultsCount');
@@ -584,8 +553,7 @@
       return;
     }
 
-    const disponibles = productos.length;
-    count.textContent = `${disponibles} producto${disponibles !== 1 ? 's' : ''} disponible${disponibles !== 1 ? 's' : ''}`;
+    count.textContent = `${productos.length} producto${productos.length !== 1 ? 's' : ''} disponible${productos.length !== 1 ? 's' : ''}`;
 
     grid.innerHTML = productos.map(p => {
       const imgHTML         = p.imagen
@@ -618,7 +586,7 @@
         </div>`;
     }).join('');
 
-    /* Animación de entrada escalonada */
+    /* Animación escalonada */
     grid.querySelectorAll('.product-card').forEach((card, i) => {
       card.style.opacity    = '0';
       card.style.transform  = 'translateY(20px)';
@@ -631,56 +599,24 @@
   }
 
   /* ══════════════════════════════════════════════════════
-     INICIO: Carga en dos fases paralelas
-     - Fase 1 (rápida): Hoja 2 → filtros visibles al instante
-     - Fase 2 (fondo):  Hoja 1 → productos se llenan después
+     INICIO: Una sola carga
   ══════════════════════════════════════════════════════ */
   async function init() {
-    /* Lanzar ambas peticiones al mismo tiempo */
-    const [promCatalogos, promProductos] = [
-      fetch(SHEET_CATALOGOS),
-      fetch(SHEET_PRODUCTOS)
-    ];
+    document.getElementById('productsGrid').innerHTML =
+      `<div class="loading-state">Cargando productos<div class="loading-dots"><span></span><span></span><span></span></div></div>`;
 
-    /* ── FASE 1: catálogos (llegan primero, hoja pequeña) ── */
     try {
-      const resCat  = await promCatalogos;
-      const textCat = await resCat.text();
-
-      /* Parser simple: toma la primera columna de cada fila, salta encabezado */
-      const catalogos = textCat.trim().split('\n')
-        .slice(1)                          // saltar fila de encabezado
-        .map(linea => linea.split(',')[0]  // primera columna
-          .replace(/^"|"$/g, '')           // quitar comillas si las hay
-          .trim()
-        )
-        .filter(Boolean);
-
-      buildFiltersFromList(catalogos);
-    } catch (err) {
-      console.warn('No se pudo cargar la hoja de catálogos:', err);
-      /* Fallback: mostrar solo el botón "Todos" que ya existe */
-    }
-
-    /* ── FASE 2: productos completos (llegan después, hoja grande) ── */
-    try {
-      const resProd  = await promProductos;
-      const textProd = await resProd.text();
-      const todos    = parseCSV(textProd).filter(p => p.nombre);
+      const res   = await fetch(SHEET_PRODUCTOS);
+      const texto = await res.text();
+      const todos = parseCSV(texto);
 
       window._productos = todos;
 
-      /* Si había un filtro pendiente (click antes de que llegaran los datos) */
-      if (window._pendingFilter) {
-        aplicarFiltro(window._pendingFilter);
-        window._pendingFilter = null;
-        return;
-      }
+      /* Construir filtros desde los catálogos reales */
+      buildFilters(todos);
 
-      /* Si la URL ya traía una categoría, renderizarla ahora */
-      if (catParam !== 'todo') {
-        aplicarFiltro(catParam);
-      }
+      /* Renderizar según la URL */
+      aplicarFiltro(catParam);
 
     } catch (err) {
       document.getElementById('productsGrid').innerHTML =
