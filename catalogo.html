@@ -571,7 +571,6 @@
   function buildFilters(productos) {
     const bar = document.getElementById('filterBar');
 
-    /* Extraer catálogos únicos en el orden que aparecen */
     const catalogosUnicos = [...new Set(
       productos.map(p => p.catalogo).filter(Boolean)
     )];
@@ -586,7 +585,7 @@
       bar.appendChild(btn);
     });
 
-    /* Marcar activo según URL */
+    /* Marcar activo según URL — el botón "Todos" nunca se marca */
     let tituloActivo    = 'Inventario';
     let subtituloActivo = 'Todo el stock disponible.';
 
@@ -597,8 +596,6 @@
         subtituloActivo = `Stock disponible en ${tituloActivo}.`;
       }
     });
-
-    /* El botón "Todos" nunca se marca como activo */
 
     document.title = `${tituloActivo} — Kolvi Game Store`;
     document.getElementById('pageTitle').textContent    = tituloActivo;
@@ -618,9 +615,12 @@
       document.getElementById('pageTitle').textContent    = slug === 'todo' ? 'Inventario' : label;
       document.getElementById('pageSubtitle').textContent = slug === 'todo' ? 'Todo el stock disponible.' : `Stock disponible en ${label}.`;
 
+      /* Limpiar búsqueda al cambiar filtro */
+      document.getElementById('searchInput').value = '';
+      document.getElementById('searchClear').classList.remove('visible');
+
       aplicarFiltro(slug);
     });
-  }
 
     /* ── Búsqueda en tiempo real ── */
     const searchInput = document.getElementById('searchInput');
@@ -660,6 +660,7 @@
       document.getElementById('pageSubtitle').textContent = slug === 'todo' ? 'Seleccioná una categoría.' : `Stock disponible en ${label}.`;
       aplicarFiltro(slug);
     });
+  } /* ── fin buildFilters ── */
 
   /* ── Filtrar y renderizar ── */
   function aplicarFiltro(slug) {
