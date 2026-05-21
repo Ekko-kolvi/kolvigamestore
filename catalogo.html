@@ -590,7 +590,7 @@
     let subtituloActivo = 'Todo el stock disponible.';
 
     bar.querySelectorAll('.filter-btn').forEach(btn => {
-      if (btn.dataset.cat === catParam) {
+      if (btn.dataset.cat === catParam && catParam !== 'todo') {
         btn.classList.add('active');
         tituloActivo    = btn.dataset.label || btn.textContent;
         subtituloActivo = `Stock disponible en ${tituloActivo}.`;
@@ -606,14 +606,14 @@
       const btn = e.target.closest('.filter-btn');
       if (!btn) return;
 
-      bar.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      if (slug !== 'todo') btn.classList.add('active');
-
       const slug  = btn.dataset.cat;
       const label = btn.dataset.label || btn.textContent;
 
+      bar.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      if (slug !== 'todo') btn.classList.add('active');
+
       document.getElementById('pageTitle').textContent    = slug === 'todo' ? 'Inventario' : label;
-      document.getElementById('pageSubtitle').textContent = slug === 'todo' ? 'Todo el stock disponible.' : `Stock disponible en ${label}.`;
+      document.getElementById('pageSubtitle').textContent = slug === 'todo' ? 'Seleccioná una categoría.' : `Stock disponible en ${label}.`;
 
       /* Limpiar búsqueda al cambiar filtro */
       document.getElementById('searchInput').value = '';
@@ -665,7 +665,12 @@
   /* ── Filtrar y renderizar ── */
   function aplicarFiltro(slug) {
     if (slug === 'todo') {
-      renderProductos(window._productos);
+      document.getElementById('productsGrid').innerHTML =
+        `<div class="select-prompt" id="selectPrompt">
+          <span class="select-prompt-arrow">☝️</span>
+          <p class="select-prompt-text">Seleccioná una categoría</p>
+        </div>`;
+      document.getElementById('resultsCount').textContent = '';
       return;
     }
     const filtrados = window._productos.filter(p => p.catalogo && toSlug(p.catalogo) === slug);
