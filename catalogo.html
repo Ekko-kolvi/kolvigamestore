@@ -749,7 +749,7 @@
       const texto = await res.text();
       const todos = parseCSV(texto);
 
-      window._productos = todos;
+      window._productos = todos.reverse();
 
       /* Construir filtros desde los catálogos reales */
       buildFilters(todos);
