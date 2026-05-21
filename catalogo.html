@@ -590,7 +590,7 @@
     let subtituloActivo = 'Todo el stock disponible.';
 
     bar.querySelectorAll('.filter-btn').forEach(btn => {
-      if (btn.dataset.cat === catParam) {
+      if (btn.dataset.cat === catParam && catParam !== 'todo') {
         btn.classList.add('active');
         tituloActivo    = btn.dataset.label || btn.textContent;
         subtituloActivo = `Stock disponible en ${tituloActivo}.`;
