@@ -535,10 +535,17 @@
 
   /* ── Filtrar y renderizar ── */
   function aplicarFiltro(slug) {
-    let filtrados = window._productos;
-    if (slug !== 'todo') {
-      filtrados = filtrados.filter(p => p.catalogo && toSlug(p.catalogo) === slug);
+    /* Si es "todo", mostrar el prompt de selección */
+    if (slug === 'todo') {
+      document.getElementById('productsGrid').innerHTML =
+        `<div class="select-prompt" id="selectPrompt">
+          <span class="select-prompt-arrow">☝️</span>
+          <p class="select-prompt-text">Seleccioná una categoría</p>
+        </div>`;
+      document.getElementById('resultsCount').textContent = '';
+      return;
     }
+    const filtrados = window._productos.filter(p => p.catalogo && toSlug(p.catalogo) === slug);
     renderProductos(filtrados);
   }
 
