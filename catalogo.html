@@ -586,7 +586,6 @@
       bar.appendChild(btn);
     });
 
-    /* Marcar activo según URL — el botón "Todos" nunca se marca */
     let tituloActivo    = 'Inventario';
     let subtituloActivo = 'Todo el stock disponible.';
 
@@ -608,7 +607,7 @@
       if (!btn) return;
 
       bar.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+      if (slug !== 'todo') btn.classList.add('active');
 
       const slug  = btn.dataset.cat;
       const label = btn.dataset.label || btn.textContent;
@@ -665,14 +664,8 @@
 
   /* ── Filtrar y renderizar ── */
   function aplicarFiltro(slug) {
-    /* Si es "todo", mostrar el prompt de selección */
     if (slug === 'todo') {
-      document.getElementById('productsGrid').innerHTML =
-        `<div class="select-prompt" id="selectPrompt">
-          <span class="select-prompt-arrow">☝️</span>
-          <p class="select-prompt-text">Seleccioná una categoría</p>
-        </div>`;
-      document.getElementById('resultsCount').textContent = '';
+      renderProductos(window._productos);
       return;
     }
     const filtrados = window._productos.filter(p => p.catalogo && toSlug(p.catalogo) === slug);
