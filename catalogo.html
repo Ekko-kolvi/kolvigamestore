@@ -663,7 +663,16 @@
   } /* ── fin buildFilters ── */
 
   /* ── Filtrar y renderizar ── */
-  function aplicarFiltro(slug) {
+  function aplicarFiltro(slug, inicial = false) {
+    if (slug === 'todo' && inicial) {
+      document.getElementById('productsGrid').innerHTML =
+        `<div class="select-prompt" id="selectPrompt">
+          <span class="select-prompt-arrow">☝️</span>
+          <p class="select-prompt-text">Seleccioná una categoría</p>
+        </div>`;
+      document.getElementById('resultsCount').textContent = '';
+      return;
+    }
     if (slug === 'todo') {
       renderProductos(window._productos);
       return;
@@ -746,7 +755,7 @@
       buildFilters(todos);
 
       /* Renderizar según la URL */
-      aplicarFiltro(catParam);
+      aplicarFiltro(catParam, true);
 
     } catch (err) {
       document.getElementById('productsGrid').innerHTML =
