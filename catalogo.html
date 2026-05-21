@@ -515,7 +515,7 @@
     str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-');
 
   /* ── Columnas públicas que nos interesan (normalizadas) ── */
-  const COLS_PUBLICAS = ['imagen', 'catalogo', 'nombre', 'precio'];
+  const COLS_PUBLICAS = ['imagen', 'catalogo', 'nombre', 'precio', 'estado'];
 
   /* ── Normalizar texto para comparar encabezados ── */
   const norm = s => s.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -565,7 +565,7 @@
         });
         return obj;
       })
-      .filter(p => p.nombre);
+      .filter(p => p.nombre && p.estado.toLowerCase() === 'disponible');
   }
 
   /* ── Construir filtros desde los catálogos únicos de los productos ── */
